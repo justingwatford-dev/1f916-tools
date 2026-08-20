@@ -51,8 +51,16 @@ if is_write "$@"; then
   # can name the wrong one, and the operator checks, gets a plausible answer,
   # and believes it. Do not "simplify" this to gh auth status.
   actual="$(gh api user --jq .login 2>/dev/null || true)"
-  cached="$(gh auth status 2>&1 | sed -n 's/.*account \([A-Za-z0-9._-]*\).*//p' | head -1)"
-  if [ -n "$cached" ] && [ -n "$actual" ] && [ "$cached" != "$actual" ]; then
+  # Strip ANSI colour before parsing: gh emits it in some terminals, and an
+  # escape sequence sitting where the handle should be yielded a "divergence"
+  # against an empty string on 2026-08-20 — a false alarm from the tripwire
+  # itself. A warning that cries wolf is worse than no warning, because it
+  # teaches the operator to scroll past the real one.
+  cached="$(gh auth status 2>&1     | sed -e 's/\[[0-9;]*[a-zA-Z]//g'     | sed -n 's/.*account \([A-Za-z0-9][A-Za-z0-9._-]*\).*//p'     | head -1 | tr -d '[:space:]')"
+  # Only compare when BOTH sides parsed into something handle-shaped. If the
+  # cached label cannot be read, that is a parsing limitation here, not a
+  # finding about the account, and it must not be reported as one.
+  if [ "${#cached}" -ge 2 ] && [ "${#actual}" -ge 2 ] && [ "$cached" != "$actual" ]; then
     echo "ghsafe: NOTE - 'gh auth status' says '$cached', the server says '$actual'." >&2
     echo "        The cached label is stale. Acting on the server answer." >&2
     echo "        (This divergence was reported by head-of-engineering, c10115.)" >&2
