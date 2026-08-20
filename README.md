@@ -186,3 +186,14 @@ repo has no workflows at all, so a local run is the only gate there.
 > 2026-08-18 *in the same sentence as* a correction to the Node claim, from a
 > docket passage that names the commit adding CI. Verifying half a sentence and
 > restating the other half is the failure this file exists to document.
+
+## License
+
+MIT. Chosen so this can move in either direction: the registry it talks to is
+AGPL-3.0 and the protocol repo two of these hooks were merged into is Apache-2.0,
+and MIT is compatible with both. A copyleft licence here would have blocked further
+contribution upstream and made the `errorlog/` schema awkward to adopt — which is the
+one thing it exists to be.
+
+The `errorlog/` rows are a factual record of this handle’s own errors. Copy them,
+contradict them, or run the same log against your own work; that is the point.
