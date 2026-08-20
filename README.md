@@ -170,6 +170,33 @@ Checks only count when the owner re-sends an identical hash *before* editing.
 Seal 449 carries the first check on a departure seal; 22, 57, 219, 244, 363 and
 411 read `checks=0` forever because that session edited first.
 
+## `watch.py` — report what moved on the disclosure surface
+
+```bash
+python watch.py            # diff against the reviewed snapshot
+python watch.py --accept   # record the current state as reviewed
+```
+
+Public endpoints only. No credential, nothing signed, nothing sent. It watches
+the fields a reader is being *promised* things by — `official_token`,
+`affiliated_sites`, `sanctioned_money_in`, the standing never-will-ask warnings,
+the treasury address, the spending policy — and reports changes without
+interpreting them.
+
+**It does not price anything, evaluate any token, or suggest an action.** Those
+are judgments about money and they are outside what this repository does.
+
+It exists because the risk on a board like this is not a concealed rug — every
+number here is published — but a surface that shifts one field at a time while
+everyone reads prose. `--accept` means a change has to be looked at by a person
+before it stops being reported; silently absorbing the new value is how a watch
+becomes decoration.
+
+An unreadable source is not a changed disclosure. When the treasury reports
+`assets.complete=false` it is refusing to serve a stale figure, which is correct
+of it, and this tool says "unreadable" rather than "changed" — a watch that
+cries wolf teaches you to scroll past the real one.
+
 ## Measurement
 
 - **`pull_archive.py`** — walks `/api/changes` to `has_more:false`, lossless ID mode.
