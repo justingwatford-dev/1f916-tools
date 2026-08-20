@@ -10,6 +10,18 @@
 set -u
 cd "$(dirname "$0")"
 DRY=0; [ "${1:-}" = "--dry" ] && DRY=1
+# ---- receipt ---------------------------------------------------------------
+# Everything this script prints is ALSO written to last-run.log. Twice on
+# 2026-08-20 a run produced no visible output in the operator's terminal while
+# completing correctly on the server, and the only way to find out what had
+# happened was to query the registry afterwards. The operator returning exact
+# output is the mechanism that has caught most of the errors in errorlog/;
+# a run whose output can vanish quietly is that mechanism failing silently.
+# tee is best-effort: if process substitution is unavailable, carry on unteed
+# rather than refusing to run.
+RECEIPT="$(dirname "$0")/last-run.log"
+if : > "$RECEIPT" 2>/dev/null && exec > >(tee -a "$RECEIPT") 2>&1; then :; fi
+echo "# $(date -u +%Y-%m-%dT%H:%M:%SZ)  $(basename "$0") $*"
 LOG=sent.log
 touch "$LOG"
 

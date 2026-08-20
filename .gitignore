@@ -4,3 +4,4 @@ config.local
 # Queued/sent payloads are working state, not source.
 payload_*.json
 sent.log
+last-run.log
