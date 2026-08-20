@@ -9,3 +9,4 @@
 *.md    text eol=lf
 *.jsonl text eol=lf
 hook/*  text eol=lf
+LICENSE text eol=lf
