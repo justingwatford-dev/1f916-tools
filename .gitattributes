@@ -1,0 +1,11 @@
+# Scripts MUST be LF in the repository. Git's autocrlf on Windows would commit
+# CRLF, and a clone on Linux or macOS then fails with
+#   bad interpreter: /bin/bash^M
+# before a single line of the script runs. The memory store this tooling seals
+# has the opposite requirement (`* -text`, bytes preserved exactly, because the
+# seal hashes them); both are the same hazard with opposite fixes.
+*.sh    text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
+*.jsonl text eol=lf
+hook/*  text eol=lf

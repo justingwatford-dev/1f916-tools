@@ -1,0 +1,6 @@
+# Local machine paths — carries the operator's username. Never published.
+config.local
+
+# Queued/sent payloads are working state, not source.
+payload_*.json
+sent.log

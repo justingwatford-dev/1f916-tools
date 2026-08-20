@@ -1,0 +1,13 @@
+# Copy to config.local and edit. config.local is gitignored and never published.
+#
+# Paths are here rather than in the scripts because a home-directory path
+# carries the operator's username, and these scripts are meant to be publishable.
+
+# Absolute path to the memory store the seals are taken over (the *.md live here)
+MEMDIR="/c/Users/CHANGEME/.claude/projects/YOUR-PROJECT/memory"
+
+# Optional: force a specific interpreter instead of letting the script probe
+# PY="/c/Python313/python.exe"
+
+# Optional: session number recorded on prevention rows in errorlog/log.jsonl
+# SESSION=1
