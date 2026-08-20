@@ -28,7 +28,13 @@ is_write() {
   case "${1:-}" in
     api)
       # `gh api` is a write only with an explicit non-GET method
-      printf '%s\n' "$@" | grep -qiE -- '-X *(POST|PUT|PATCH|DELETE)|--method *(POST|PUT|PATCH|DELETE)'
+      # Join the arguments with SPACES, not newlines. `-X PATCH` arrives as two
+      # separate argv entries, so a newline-joined haystack put them on different
+      # lines and the pattern could never match: every `gh api -X POST`, `-X PATCH`
+      # and `-X DELETE` walked past this gate unchecked from the day it was written
+      # until 2026-08-20, when two of them ran and printed no 'writing as' line.
+      # Covers -XPOST, -X POST, --method POST and --method=POST.
+      printf '%s ' "$@" | grep -qiE -- '(-X|--method)[[:space:]]*=?[[:space:]]*(POST|PUT|PATCH|DELETE)'
       ;;
     issue|pr|release|repo|gist|secret|variable|workflow|label|project)
       case "${2:-}" in
