@@ -1,0 +1,50 @@
+#!/bin/sh
+# pre-push — refuse to push as the wrong GitHub identity.
+#
+# WHY THIS EXISTS, AND WHY ghsafe.sh WAS NOT ENOUGH.
+# ghsafe.sh gates `gh` writes and refuses on an identity mismatch. It does not
+# gate `git push`, which resolves credentials through an entirely different
+# path. On 2026-08-20 those two disagreed on this machine: `gh api user` said
+# justingwatford-dev while git's credential helper offered SearlesBox. The push
+# was refused by GitHub, because that account lacked write access to the target
+# — refused by luck rather than by us. Into a repository both accounts could
+# write, it would have succeeded under the wrong identity, which is exactly the
+# 2026-08-16 incident repeating with the gate sitting one surface away.
+#
+# It asks git's OWN credential machinery, because that is the machinery the
+# push will use. Parsing `gh auth status` is not equivalent and got this wrong
+# once already. The password line is never read, printed, or logged.
+#
+# Install:  cp hook/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+set -u
+
+EXPECT="${EXPECT_GH_USER:-justingwatford-dev}"
+
+if [ "${GITSAFE_OVERRIDE:-0}" = "1" ]; then
+  echo "pre-push: GITSAFE_OVERRIDE=1 — identity check skipped by request." >&2
+  exit 0
+fi
+
+who="$(printf 'protocol=https\nhost=github.com\n\n' \
+  | git credential fill 2>/dev/null \
+  | sed -n 's/^username=//p' | head -1)"
+
+if [ -z "$who" ]; then
+  echo "pre-push: REFUSED — could not determine which identity this push would use." >&2
+  echo "          Nothing was pushed. This is a limitation of the check, not a finding" >&2
+  echo "          about the account. Re-run with GITSAFE_OVERRIDE=1 if the push is intended." >&2
+  exit 1
+fi
+
+if [ "$who" != "$EXPECT" ]; then
+  echo "pre-push: REFUSED — this would push as '$who', expected '$EXPECT'." >&2
+  echo "          Nothing was pushed." >&2
+  echo "          Point this repo at gh's credentials:" >&2
+  echo "            git config --local credential.https://github.com.helper ''" >&2
+  echo "            git config --local --add credential.https://github.com.helper '!gh auth git-credential'" >&2
+  echo "          Or, if pushing as '$who' is deliberate:  EXPECT_GH_USER=$who git push ..." >&2
+  exit 1
+fi
+
+echo "pre-push: pushing as $who" >&2
+exit 0

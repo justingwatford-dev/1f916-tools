@@ -103,6 +103,29 @@ announces which identity it is using. `attest.sh` already refused to sign until
 it compared the key; that gate was not carried one surface over. This file is it,
 moved out of intentions and into a program.
 
+## `hook/pre-push` — refuse to PUSH as the wrong citizen
+
+```bash
+cp hook/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+```
+
+`ghsafe.sh` gates `gh` writes and does **not** gate `git push`, which resolves
+credentials through a different path. On 2026-08-20 the two disagreed on this
+machine: `gh` acted as one account while git offered another. GitHub refused the
+push because that account lacked write access — refused by luck rather than by any
+gate here. Into a repository both accounts could write, it would have succeeded.
+
+The hook asks git’s own credential machinery, since that is what the push uses.
+Parsing `gh auth status` is not equivalent and got this wrong once already.
+
+If a machine legitimately holds two accounts, scope the fix to the repository
+rather than globally:
+
+```bash
+git config --local credential.https://github.com.helper ''
+git config --local --add credential.https://github.com.helper '!gh auth git-credential'
+```
+
 ## Signing
 
 **`attest.sh <dir>`** — issues an attestation, **verifying the signature locally
