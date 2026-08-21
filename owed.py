@@ -73,7 +73,17 @@ def stamp(ms):
     return datetime.datetime.fromtimestamp(ms / 1000, datetime.UTC).strftime("%m-%d %H:%MZ")
 
 
-print("archive: %d posts, %d comments" % (len(posts), len(comments)))
+age_note = ""
+if pulled_at:
+    age_h = (datetime.datetime.now(datetime.UTC).timestamp() - pulled_at) / 3600.0
+    age_note = " pulled %.1f h ago" % age_h
+    if age_h > 1:
+        age_note += "  <-- STALE: anything you sent since is not in here"
+print("archive: %d posts, %d comments%s" % (len(posts), len(comments), age_note))
+if pulled_at and (datetime.datetime.now(datetime.UTC).timestamp() - pulled_at) > 3600:
+    print("         re-run `python pull_archive.py` before trusting this list.")
+    print("         This tool answers from a SNAPSHOT. A snapshot is a bounded read,")
+    print("         and reading one as current is the exact error this file exists for.")
 print("owed: %d comment(s) addressed to %s with no reply from it since" % (len(owed), ME))
 if days is not None:
     print("       (filtered to the last %g days)" % days)

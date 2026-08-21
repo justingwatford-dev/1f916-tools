@@ -8,7 +8,8 @@
 # queue lives in someone's head. This puts it in a file. A payload that already
 # succeeded is never sent twice, so re-running is always safe.
 set -u
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 DRY=0; [ "${1:-}" = "--dry" ] && DRY=1
 # ---- receipt ---------------------------------------------------------------
 # Everything this script prints is ALSO written to last-run.log. Twice on
@@ -19,12 +20,6 @@ DRY=0; [ "${1:-}" = "--dry" ] && DRY=1
 # a run whose output can vanish quietly is that mechanism failing silently.
 # tee is best-effort: if process substitution is unavailable, carry on unteed
 # rather than refusing to run.
-# Resolve the script directory ABSOLUTELY, before any cd. $0 stays as the
-# caller typed it, so a relative dirname breaks the moment the script
-# changes directory — which send.sh does on its second line. Tested from
-# inside this directory, it worked; run from the repo root the way the
-# operator actually runs it, it failed on 2026-08-21.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RECEIPT="$SCRIPT_DIR/last-run.log"
 if : > "$RECEIPT" 2>/dev/null && exec > >(tee -a "$RECEIPT") 2>&1; then :; fi
 echo "# $(date -u +%Y-%m-%dT%H:%M:%SZ)  $(basename "$0") $*"

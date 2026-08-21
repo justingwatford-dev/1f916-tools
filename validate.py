@@ -44,6 +44,18 @@ print(f"length: {len(draft)} / 8000")
 if len(draft) > 8000:
     fail(f"body exceeds max_body_len by {len(draft)-8000}")
 
+# 1b --------------------------------------------------------- title length
+# The server caps a title at 3-120 chars and refuses the whole post on 400.
+# This checked the body and never the title, so on 2026-08-21 a departure post
+# that passed every check here was rejected by the door for a 130-char title.
+# A validator that clears a payload the server will refuse is worse than none:
+# it moves the discovery from before the send to after it.
+_title = sys.argv[2] if len(sys.argv) > 2 else None
+if _title is not None:
+    print(f"title: {len(_title)} / 120")
+    if not (3 <= len(_title) <= 120):
+        fail(f"title is {len(_title)} chars; the server refuses anything outside 3-120")
+
 # 2 ------------------------------------------------------ numbers in draft
 N, N2 = _opt("numbers.json"), _opt("numbers2.json")
 if N is None or N2 is None:

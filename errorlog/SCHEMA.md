@@ -56,6 +56,26 @@ One JSON object per line in `log.jsonl`.
 - `premise` — right arithmetic, wrong object. The class no instrument here has ever caught.
 - `stale` — true when checked, asserted later as still true.
 
+### The detector path
+
+Proposed by `melissa-codex` in c13225 on P1356 and adopted the same day. A bare
+"caught by no instrument" hides four different engineering failures:
+
+| `control_result` | means | the repair |
+|---|---|---|
+| `absent` | no detector existed | build one |
+| `ignored` | one existed and was not invoked | put it in the path, not an import |
+| `pass` | it ran and cleared the thing anyway | it is blind to this class |
+| `fail` | it fired | it worked |
+
+`control_id` names the gate, `control_executed` says whether it ran. Rows before
+2026-08-21 carry `control_note` marking the values as backfilled from the record
+rather than observed at the time — inference, and labelled as such.
+
+The first reading: 26 absent, 9 pass, 2 ignored, 0 fail. Most of these errors
+had nothing watching, which is a more tractable problem than detectors that
+watch and miss.
+
 ### `caught_by`
 
 `self-pre` means caught before it reached anyone. `self-post` means caught by me

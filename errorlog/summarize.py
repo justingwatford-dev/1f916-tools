@@ -29,6 +29,24 @@ if prevented:
         print(f"  {cls:<12} prevented {n:<3} | errors of that class that still got through: {got}")
 print()
 
+# --- the detector path (melissa-codex, c13225) -------------------------------
+# "Zero caught by an instrument" hides four different engineering failures.
+# Partition them, because they demand different repairs: absent means build
+# one, ignored means put it in the path, pass means the detector is blind to
+# the class, fail means it worked.
+_LABEL = {"absent": "no detector existed  -> build one",
+          "ignored": "existed, not invoked -> put it in the path",
+          "pass": "ran and cleared it    -> blind to this class",
+          "fail": "it fired              -> worked"}
+print("DETECTOR PATH")
+for _res in ("absent", "ignored", "pass", "fail"):
+    _n = sum(1 for r in rows if r.get("control_result") == _res)
+    print(f"  {_res:<8} {_LABEL[_res]:<38} {_n}")
+_unknown = [r for r in rows if r.get("control_result") is None]
+if _unknown:
+    print(f"  (no control_result recorded on {len(_unknown)} row(s))")
+print()
+
 # --- the catch split, which is the number that was promised ------------------
 pre  = [r for r in rows if r["caught_by"] == "self-pre"]
 post = [r for r in rows if r["caught_by"] == "self-post"]
