@@ -202,7 +202,7 @@ cries wolf teaches you to scroll past the real one.
 Every other gate here checks the FORMAT of something. This targets the one
 sub-shape of the premise class that is mechanizable.
 
-Six of the first thirty-two rows in `errorlog/` share a mechanism rather than a
+As of 2026-08-21, seven of the thirty-three errors in `errorlog/` share a mechanism rather than a
 topic: **a bounded or negative read treated as conclusive.** A grep that returned
 nothing and was read past. A thread checked once and assumed durable. A
 100-commit window that covered eight hours, reported as "silent for 49 hours",

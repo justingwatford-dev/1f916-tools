@@ -59,7 +59,13 @@ prevent() {  # prevent <gate> <message>   — appends to the SAME table as error
 # a run whose output can vanish quietly is that mechanism failing silently.
 # tee is best-effort: if process substitution is unavailable, carry on unteed
 # rather than refusing to run.
-RECEIPT="$(dirname "$0")/last-run.log"
+# Resolve the script directory ABSOLUTELY, before any cd. $0 stays as the
+# caller typed it, so a relative dirname breaks the moment the script
+# changes directory — which send.sh does on its second line. Tested from
+# inside this directory, it worked; run from the repo root the way the
+# operator actually runs it, it failed on 2026-08-21.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RECEIPT="$SCRIPT_DIR/last-run.log"
 if : > "$RECEIPT" 2>/dev/null && exec > >(tee -a "$RECEIPT") 2>&1; then :; fi
 echo "# $(date -u +%Y-%m-%dT%H:%M:%SZ)  $(basename "$0") $*"
 die() { prevent "${GATE:-unnamed}" "$*"; echo "REFUSED: $*" >&2; exit 4; }

@@ -20,6 +20,7 @@ that produced it was bad: a single unpaginated page of 100 commits, at a moment
 when an automated witness was committing ~12/hour, covered only about eight
 hours of history. The maintainer committed at 02:49Z and again at 03:31Z, four
 minutes after the collection transactions. Use a date-bounded query.
+
 The risk here is not a hidden rug; it is a surface that shifts a field at a time
 while everyone is reading prose. So watch the fields.
 
@@ -31,7 +32,7 @@ business, nor its author's.
 --accept exists so a change must be looked at by a person before it stops being
 reported. Silently absorbing the new value is how a watch becomes decoration.
 """
-import io, json, os, sys, urllib.request, datetime
+import io, json, os, sys, urllib.request, datetime, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNAP = os.path.join(HERE, "watch-snapshot.json")
@@ -121,12 +122,35 @@ if not changed:
     print("  no change across %d watched fields." % len(current))
     raise SystemExit(0)
 
+def show_diff(before, after, context=70, max_chunks=6):
+    """Print the regions that actually differ.
+
+    Printing the first N characters of each side is worse than useless when the
+    change is deep in a long string: the reader sees two identical prefixes
+    under a heading that says something moved, and learns to distrust the tool.
+    On 2026-08-21 a spending_policy field went from 2,418 to 6,600 characters —
+    an entire new disclosure section — and the prefix view showed no difference
+    at all.
+    """
+    a = json.dumps(before, ensure_ascii=False, sort_keys=True)
+    b = json.dumps(after, ensure_ascii=False, sort_keys=True)
+    print("   size: %d -> %d chars" % (len(a), len(b)))
+    chunks = [op for op in difflib.SequenceMatcher(None, a, b).get_opcodes() if op[0] != "equal"]
+    for tag, i1, i2, j1, j2 in chunks[:max_chunks]:
+        print("   %s:" % tag.upper())
+        if i2 > i1:
+            print("     was: ...%s..." % a[max(0, i1 - context):i2 + context].replace(chr(10), " "))
+        if j2 > j1:
+            print("     now: ...%s..." % b[max(0, j1 - context):j2 + context].replace(chr(10), " "))
+    if len(chunks) > max_chunks:
+        print("   ... and %d further changed regions; read the endpoint directly." % (len(chunks) - max_chunks))
+
+
 print("  %d FIELD(S) MOVED. These are reports, not verdicts:" % len(changed))
 for k in changed:
     print()
     print("  == %s ==" % k)
-    print("   was: %s" % json.dumps(prev.get(k), ensure_ascii=False)[:400])
-    print("   now: %s" % json.dumps(current[k], ensure_ascii=False)[:400])
+    show_diff(prev.get(k), current[k])
 print()
 print("  Review each, then `python watch.py --accept` to stop reporting them.")
 raise SystemExit(1)

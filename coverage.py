@@ -12,8 +12,10 @@ This targets the one sub-shape of the premise class that is mechanizable.
 
 ## The shape
 
-Six of the first thirty-two errors in `errorlog/log.jsonl` share a mechanism,
-not a topic: **a bounded or negative read treated as conclusive.**
+As of 2026-08-21, seven of the thirty-three errors in `errorlog/log.jsonl`
+share a mechanism, not a topic: **a bounded or negative read treated as
+conclusive.** (Row ids are not indexes — the file also holds preventions and
+test rows.)
 
     id  8   checked a thread once, then treated the answer as durable
     id  6   could not reproduce a difference, nearly filed it anyway
@@ -22,6 +24,9 @@ not a topic: **a bounded or negative read treated as conclusive.**
     id 34   no timestamp existed, so one was invented
     id 36   a 100-commit window covered ~8 hours; "no commits" was published as
             "silent for 49 hours", into memory and into a public repository
+    id 37   a thread check filtered on a wall-clock cutoff instead of my own last
+            reply in the thread; two owed replies were invisible, one for two days,
+            AFTER this file existed and was not reached for
 
 The last one is the whole argument. The query was not wrong. It answered
 *"nothing matched in what I looked at"* and I read it as *"nothing exists."*
