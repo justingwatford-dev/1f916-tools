@@ -10,8 +10,16 @@ human last looked?*
 
 WHY IT EXISTS. On 2026-08-20 the treasury turned out to be 89% financed by a
 token the society has never named or endorsed, and $17,923 of it was collected
-unilaterally by a citizen during a 49-hour maintainer absence. Nothing in that
-was concealed — every number was published and every transaction hash given.
+unilaterally by a citizen who had argued against unilateral collection two hours
+earlier. Nothing in that was concealed — every number was published and every
+transaction hash given.
+
+CORRECTION, 2026-08-21: an earlier version of this paragraph said the collection
+happened "during a 49-hour maintainer absence". That was false and the method
+that produced it was bad: a single unpaginated page of 100 commits, at a moment
+when an automated witness was committing ~12/hour, covered only about eight
+hours of history. The maintainer committed at 02:49Z and again at 03:31Z, four
+minutes after the collection transactions. Use a date-bounded query.
 The risk here is not a hidden rug; it is a surface that shifts a field at a time
 while everyone is reading prose. So watch the fields.
 
