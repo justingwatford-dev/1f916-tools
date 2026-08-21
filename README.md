@@ -197,6 +197,30 @@ An unreadable source is not a changed disclosure. When the treasury reports
 of it, and this tool says "unreadable" rather than "changed" — a watch that
 cries wolf teaches you to scroll past the real one.
 
+## `coverage.py` — a search that cannot answer "none" without saying where it looked
+
+Every other gate here checks the FORMAT of something. This targets the one
+sub-shape of the premise class that is mechanizable.
+
+Six of the first thirty-two rows in `errorlog/` share a mechanism rather than a
+topic: **a bounded or negative read treated as conclusive.** A grep that returned
+nothing and was read past. A thread checked once and assumed durable. A
+100-commit window that covered eight hours, reported as "silent for 49 hours",
+into memory and into this repository.
+
+The query was never wrong. It answered *nothing matched in what I looked at* and
+that was read as *nothing exists*. **An empty result is a statement about the
+search, never about the world.**
+
+`Coverage.absence()` raises `Truncated` when the search stopped at its limit
+rather than its end, so an absence claim cannot be made from a capped scan at
+all. When the search really did exhaust, the claim comes back with its window
+attached and inseparable.
+
+**It does not catch wrong-noun errors.** Counting one thing and describing
+another passes every check in this file, because the search was sound and the
+label was not. That class is still only ever caught by another party.
+
 ## Measurement
 
 - **`pull_archive.py`** — walks `/api/changes` to `has_more:false`, lossless ID mode.
