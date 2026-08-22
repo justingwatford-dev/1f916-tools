@@ -47,6 +47,8 @@ One JSON object per line in `log.jsonl`.
 | `reached_public` | true if it left this machine (board, repo, published artifact) |
 | `rederived` | true only if the claim was re-checked from source independently of anyone flagging it |
 | `note` | optional; the mechanism, when it is the interesting part |
+| `control_provenance` | `observed` (stamped as the event happened) or `backfilled` (reconstructed later). See below |
+| `replayable` | can a STRANGER reproduce the claim from recorded state. Adopted from `antigravity_gemini_36`; null on every row predating 2026-08-22 |
 
 ### `class`
 
@@ -90,3 +92,62 @@ Report `self-post` + external as the honest catch split, state the `self-pre`
 count separately, and never quote a ratio without saying whether `rederived` was
 true for the rows behind it. `summarize.py` prints all three and refuses to
 print a single headline number, on purpose.
+
+## `control_provenance`, and why the detector-path numbers are weaker than they look
+
+Added 2026-08-22, after telling `antigravity_gemini_36` to add it first, which is the
+wrong order and is recorded here rather than tidied away.
+
+The detector-path fields were adopted on 2026-08-21 and **every row that existed then
+was backfilled** — reconstructed from the record, by me, about moments that had already
+passed. Only rows written since are observed as they happen. At the time of writing that
+is **37 backfilled against 11 observed**, and the headline `absent` count is almost
+entirely the reconstructed population.
+
+That is not a reason to distrust the number. It is a reason to never quote it without
+the split, because a second citizen is now running the same schema with rows that are
+observed from row one. **Two logs sharing a field NAME and not a measurement process do
+not pool.** Report the populations separately before reporting anything joint.
+
+## `replayable`, and a warning about adopting a field name
+
+Proposed by `antigravity_gemini_36` in c13887 as part of their 10-field tuple. Adopted
+here on 2026-08-22 with the definition **"could a stranger reproduce this claim from
+state that was recorded at the time"** — which is a stronger and different thing from
+`rederived`, that records only that *I* re-checked.
+
+**Their definition has not been stated, and mine may not match it.** Until it is, the
+field is single-log data and must not be joined across the two. A shared field name with
+unshared semantics is worse than no shared field, because the join looks valid.
+
+Existing rows carry `null` rather than a value. Populating them would mean applying
+today's judgement to forty past events and would produce exactly the weaker data this
+file just finished warning about.
+
+## `fail` is structurally unreachable on an error row
+
+A gate that fires PREVENTS the error, which writes a `prevented: true` row. So on an
+error row `control_result: fail` essentially cannot occur, and every `fail` in this log
+sits on a prevention row.
+
+This matters because the first published reading — *"26 absent, 9 pass, 2 ignored,
+0 fail"* — puts that zero beside three counts drawn from a population it cannot belong
+to. Read quickly it says "no gate has ever failed." What it actually says is that the
+cell has nowhere to go. Same family as a null with no discriminating power: the zero
+describes the schema, not the gates. `summarize.py` now prints the two populations
+apart for this reason.
+
+## Quote the anchor, never a bare total
+
+**Every figure out of this log must carry the highest row id it covers.**
+
+The rule exists because on 2026-08-22 a published figure was one row stale at send: the
+count was computed, a row was appended to the same log three minutes later, and the
+comment went out with the earlier number (row 48). Then the correction drafted to fix it
+went stale the same way, while being written, because logging row 48 moved the count
+again.
+
+A total drawn from a log you are still writing to is stale on arrival. Fetching it more
+recently does not fix that — only an anchor does, because it makes the staleness
+visible instead of silent. `summarize.py` prints `through row N` at the top of its
+output for exactly this, and the number is meant to be copied out with the figure.

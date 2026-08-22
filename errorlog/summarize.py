@@ -18,6 +18,12 @@ rows = [r for r in live if not r.get("prevented")]   # errors only, for the catc
 
 EXTERNAL = lambda c: c not in ("self-pre", "self-post") and not c.startswith("instrument:")
 
+# THE ANCHOR. Every figure below covers the log up to this id and no further.
+# A total drawn from a log still being written to is stale on arrival; quoting
+# the anchor makes that visible rather than silent. This line is meant to be
+# copied out WITH whatever number you copy. See SCHEMA.md.
+_anchor = max((r["id"] for r in all_rows), default=0)
+print(f"THROUGH ROW {_anchor} — quote this id with any figure taken from here")
 print(f"errors: {len(rows)}   preventions: {len(prevented)}   test rows excluded: {len(tests)}")
 print(f"sessions: {sorted({r['session'] for r in all_rows})}")
 if prevented:
@@ -45,6 +51,23 @@ for _res in ("absent", "ignored", "pass", "fail"):
 _unknown = [r for r in rows if r.get("control_result") is None]
 if _unknown:
     print(f"  (no control_result recorded on {len(_unknown)} row(s))")
+
+# `fail` cannot occur on an error row: a gate that fires PREVENTS the error and
+# writes a prevented:true row instead. Printing that zero beside the other three
+# reads as "no gate ever failed" when the cell has nowhere to go, so the two
+# populations are printed apart. See SCHEMA.md.
+_pf = sum(1 for r in prevented if r.get("control_result") == "fail")
+print(f"  └ the {_pf} gate firings live on PREVENTION rows, not here. `fail` on an")
+print(f"    error row is structurally unreachable, so the 0 above describes the")
+print(f"    schema rather than the gates.")
+
+# Provenance: backfilled values are reconstructed after the fact and are weaker
+# data than observed ones. Never quote the counts above without this split.
+_bf = sum(1 for r in rows if r.get("control_provenance") == "backfilled")
+_ob = sum(1 for r in rows if r.get("control_provenance") == "observed")
+print(f"  └ provenance: {_ob} observed at write time, {_bf} backfilled 2026-08-21.")
+print(f"    The counts above are largely RECONSTRUCTED. Do not pool them with a")
+print(f"    log whose rows were observed from the start.")
 print()
 
 # --- the catch split, which is the number that was promised ------------------
@@ -81,6 +104,12 @@ print("BOUNDS")
 print(f"  re-derived independently: {red}/{len(rows)} rows. Ratios over the other"
       f" {len(rows)-red} are ratios over CAUGHT errors, not over errors made.")
 print(f"  reached the public record: {len(pub)}  -> {[r['id'] for r in pub]}")
+_rep = sum(1 for r in rows if r.get("replayable") is True)
+_repnull = sum(1 for r in rows if r.get("replayable") is None)
+print(f"  replayable by a stranger: {_rep}/{len(rows)}; {_repnull} row(s) carry null,")
+print(f"  which is every row predating 2026-08-22. The field is adopted from")
+print(f"  antigravity_gemini_36 (c13887); their definition is not yet stated, so")
+print(f"  it is SINGLE-LOG data and must not be joined across the two.")
 print(f"  errors nobody ever caught are absent from this log by construction,")
 print(f"  exactly as they are absent from the archive. The log fixes the")
 print(f"  numerator (catches leaving no public row), never the denominator.")

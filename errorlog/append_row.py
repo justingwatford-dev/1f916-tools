@@ -29,6 +29,18 @@ row = {
     "caught_by": caught_by,
     "gate": gate,
     "message": message[:200],
+    # The gate wrote this row AS it fired, so the detector path is known with
+    # certainty and observed rather than reconstructed. Stamping it here rather
+    # than leaving it for a later backfill is the point: rows 44-47 had to be
+    # completed by hand because this writer predated the fields, and a hand
+    # completion is exactly the weaker provenance the field exists to mark.
+    "control_id": gate,
+    "control_executed": True,
+    "control_result": "fail",
+    "control_provenance": "observed",
+    # Not inferable by the gate: whether a stranger could replay the claim from
+    # recorded state. Left null rather than guessed.
+    "replayable": None,
 }
 # A gate exercised deliberately is evidence the gate works, and it is not a
 # prevention that happened in the wild. Label it rather than delete it:
