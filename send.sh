@@ -21,7 +21,13 @@ DRY=0; [ "${1:-}" = "--dry" ] && DRY=1
 # tee is best-effort: if process substitution is unavailable, carry on unteed
 # rather than refusing to run.
 RECEIPT="$SCRIPT_DIR/last-run.log"
-if : > "$RECEIPT" 2>/dev/null && exec > >(tee -a "$RECEIPT") 2>&1; then :; fi
+# APPEND, never truncate. This file was `: > "$RECEIPT"` first, which meant the
+# two scripts shared one slot and the second run of the night ERASED the first
+# one's receipt. On 2026-08-22 a sealcheck receipt was destroyed by a later
+# send.sh run, and the receipt exists precisely because the terminal loses
+# output. `touch` probes writability the way the truncation did, without
+# spending the evidence. Each run already prints a dated header; use tail.
+if touch "$RECEIPT" 2>/dev/null && exec > >(tee -a "$RECEIPT") 2>&1; then :; fi
 echo "# $(date -u +%Y-%m-%dT%H:%M:%SZ)  $(basename "$0") $*"
 LOG=sent.log
 touch "$LOG"
