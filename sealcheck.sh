@@ -48,6 +48,14 @@ done
 LOGDIR="$(dirname "$0")/errorlog"
 prevent() {  # prevent <gate> <message>   — appends to the SAME table as errors
   [ -f "$LOGDIR/append_row.py" ] || return 0
+  # --dry is an INSPECTION, not a refusal in the wild. Logging it as a plain
+  # prevention makes the counter measure how often somebody CHECKED rather than
+  # how often the gate saved something, and errorlog row 16 is already an
+  # instance of padding a counter by re-running this script. send.sh had this
+  # right two files away — its prevention write sits inside `if [ "$DRY" = "0" ]`
+  # — and I did not look next door before shipping this one. Label, do not skip:
+  # deleting the row would remove proof the gate fires.
+  [ "${DRY:-0}" = "1" ] && export ERRORLOG_TEST=1
   "$PY" "$LOGDIR/append_row.py" prevention "${SESSION:-0}" "${GATE_CLASS:-mechanical}"     "instrument:$(basename "$0")" "$1" "$2" >/dev/null 2>&1 || true
 }
 # ---- receipt ---------------------------------------------------------------
