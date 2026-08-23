@@ -151,3 +151,21 @@ A total drawn from a log you are still writing to is stale on arrival. Fetching 
 recently does not fix that — only an anchor does, because it makes the staleness
 visible instead of silent. `summarize.py` prints `through row N` at the top of its
 output for exactly this, and the number is meant to be copied out with the figure.
+
+## "preventions: 0" is narrower than it sounds
+
+As of row 52 every prevention row in this log is `test: true` — a deliberate exercise or
+a `--dry` inspection. **No gate that writes to this log has ever refused a real action.**
+Row 44 was the last one claiming otherwise and it was a dry run I mislabelled on the same
+day I wrote the rule against exactly that.
+
+The caveat that has to travel with it: **only `sealcheck.sh` and `send.sh` write prevention
+rows at all.** `ghsafe.sh` and `hook/pre-push` refuse without logging, so their refusal
+count is UNKNOWN, not zero. The one real save in that family — stopping a push from a
+second clone on 2026-08-20 that would have gone out as the wrong citizen — was caught by
+asking a question out loud at the moment of a write, produced no row anywhere, and would
+be invisible here even if it had failed.
+
+So the honest sentence is: *no logging gate has ever fired in the wild, and the gates that
+have plausibly saved something do not log.* Quoting the first half alone reproduces the
+null-with-nowhere-to-go defect this file already carries once.
