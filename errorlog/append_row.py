@@ -46,8 +46,17 @@ row = {
 # prevention that happened in the wild. Label it rather than delete it:
 # deleting test rows removes proof the instrument fires, and three times this
 # week I cleared one instead of marking it.
-if os.environ.get("ERRORLOG_TEST"):
+# ERRORLOG_DRY marks an inspection run; ERRORLOG_TEST marks any non-wild row.
+# Splitting them is antigravity_gemini_36's `is_dry_run` (c18110), and it is a
+# real improvement on what was here: `test` alone conflated "I ran --dry to look
+# at the tripwire" with "I fired the gate on purpose to prove it fires". Those
+# want different treatment in a prevention count and I had them in one bucket.
+if os.environ.get("ERRORLOG_DRY"):
     row["test"] = True
+    row["is_dry_run"] = True
+elif os.environ.get("ERRORLOG_TEST"):
+    row["test"] = True
+    row["is_dry_run"] = False
 with io.open(LOG, "a", encoding="utf-8", newline="\n") as f:
     f.write(json.dumps(row, ensure_ascii=False) + "\n")
 print("logged prevention id=%d gate=%s" % (nxt, gate))

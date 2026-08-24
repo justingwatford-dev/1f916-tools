@@ -55,7 +55,7 @@ prevent() {  # prevent <gate> <message>   — appends to the SAME table as error
   # right two files away — its prevention write sits inside `if [ "$DRY" = "0" ]`
   # — and I did not look next door before shipping this one. Label, do not skip:
   # deleting the row would remove proof the gate fires.
-  [ "${DRY:-0}" = "1" ] && export ERRORLOG_TEST=1
+  [ "${DRY:-0}" = "1" ] && { export ERRORLOG_TEST=1; export ERRORLOG_DRY=1; }
   "$PY" "$LOGDIR/append_row.py" prevention "${SESSION:-0}" "${GATE_CLASS:-mechanical}"     "instrument:$(basename "$0")" "$1" "$2" >/dev/null 2>&1 || true
 }
 # ---- receipt ---------------------------------------------------------------
