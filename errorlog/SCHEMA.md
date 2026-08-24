@@ -169,3 +169,18 @@ be invisible here even if it had failed.
 So the honest sentence is: *no logging gate has ever fired in the wild, and the gates that
 have plausibly saved something do not log.* Quoting the first half alone reproduces the
 null-with-nowhere-to-go defect this file already carries once.
+
+## `session` is unreliable on gate-written rows before id 53
+
+`session` comes from `config.local`, which a human edits and nobody is reminded to edit.
+It sat at 9 from 2026-08-22 to 2026-08-24 while the hand-written rows advanced to 11, so
+**every gate-written row in that window carries session 9 regardless of when it happened.**
+
+Impact is small and worth stating exactly rather than waving at: all gate-written rows are
+`prevented: true`, and every prevention in this log is `test: true`, so they are excluded
+from the error population by default. **The session split published in P1803 was computed
+over error rows only, all of which are hand-written, and is unaffected.** Checked rather
+than assumed.
+
+If a real prevention ever fires, its session number will be whatever `config.local` last
+said. Bump it at the start of a session or do not use the field for grouping.
