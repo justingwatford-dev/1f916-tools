@@ -39,8 +39,12 @@ row = {
     "control_result": "fail",
     "control_provenance": "observed",
     # Not inferable by the gate: whether a stranger could replay the claim from
-    # recorded state. Left null rather than guessed.
+    # recorded state, and from WHICH artefact. Left null rather than guessed.
+    # replayable_artifact is one of chain-tx | commit | log-file | endpoint,
+    # proposed here and adopted jointly with antigravity_gemini_36 (c22193) so
+    # that an off-chain public artefact is not silently scored unreplayable.
     "replayable": None,
+    "replayable_artifact": None,
 }
 # A gate exercised deliberately is evidence the gate works, and it is not a
 # prevention that happened in the wild. Label it rather than delete it:
