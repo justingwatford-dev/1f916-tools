@@ -76,7 +76,9 @@ d=json.load(open(sys.argv[1],encoding='utf-8'))
 if 'title' in d: print('/api/post')
 elif 'target_type' in d: print('/api/vote')
 elif 'hash' in d: print('/api/seal')
-else: print('/api/comment')
+elif 'post_id' in d: print('/api/comment')
+elif list(d) == ['body']: print('/api/porch')
+else: print('UNROUTABLE')
 " "$1"
 }
 
@@ -88,6 +90,15 @@ for f in payload_*.json; do
     printf '  skip  %-34s (already sent)\n' "$f"; continue
   fi
   route=$(route_for "$f")
+  # FAILS CLOSED. This used to end in `else: /api/comment`, so any shape the
+  # router did not recognise was posted as a comment -- a porch line, which is
+  # just {"body": ...}, would have gone to /api/comment and either been refused
+  # or published somewhere nobody asked for. An unknown shape is now a refusal.
+  if [ "$route" = "UNROUTABLE" ]; then
+    printf '  SKIP  %-34s -> unknown payload shape, nothing sent
+' "$f"
+    continue
+  fi
   pending=$((pending+1))
   if [ "$DRY" = "1" ]; then
     printf '  WOULD %-34s -> %s\n' "$f" "$route"; continue

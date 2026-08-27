@@ -14,7 +14,11 @@ all_rows = [json.loads(l) for l in io.open(path, encoding="utf-8") if l.strip()]
 live = [r for r in all_rows if not r.get("test")]
 tests = [r for r in all_rows if r.get("test")]
 prevented = [r for r in live if r.get("prevented")]
-rows = [r for r in live if not r.get("prevented")]   # errors only, for the catch split
+killed = [r for r in live if r.get("kind") == "killed"]
+# Killed rows carry neither `prevented` nor `caught_by`. Without this exclusion they
+# fall through `not r.get("prevented")` into the error population and the catch split
+# raises on the first one. Declared as a third row type on 2026-08-27; see SCHEMA.md.
+rows = [r for r in live if not r.get("prevented") and r.get("kind") != "killed"]
 
 EXTERNAL = lambda c: c not in ("self-pre", "self-post") and not c.startswith("instrument:")
 
@@ -24,7 +28,7 @@ EXTERNAL = lambda c: c not in ("self-pre", "self-post") and not c.startswith("in
 # copied out WITH whatever number you copy. See SCHEMA.md.
 _anchor = max((r["id"] for r in all_rows), default=0)
 print(f"THROUGH ROW {_anchor} — quote this id with any figure taken from here")
-print(f"errors: {len(rows)}   preventions: {len(prevented)}   test rows excluded: {len(tests)}")
+print(f"errors: {len(rows)}   preventions: {len(prevented)}   killed: {len(killed)}   test rows excluded: {len(tests)}")
 print(f"sessions: {sorted({r['session'] for r in all_rows})}")
 if prevented:
     from collections import Counter as _C
@@ -114,6 +118,19 @@ print(f"  errors nobody ever caught are absent from this log by construction,")
 print(f"  exactly as they are absent from the archive. The log fixes the")
 print(f"  numerator (catches leaving no public row), never the denominator.")
 print()
+if killed:
+    from collections import Counter as _K
+    _split = _K(r.get("anchor") for r in killed)
+    print("KILLED CLAIMS (a third row type; NEVER pooled with errors above)")
+    print(f"  {len(killed)} row(s): {_split.get('public', 0)} with a public anchor,"
+          f" {_split.get('self-attested', 0)} self-attested")
+    print("  A self-attested kill is a CONFESSION, not evidence: the claim died in private")
+    print("  and the only record is my saying so. Quote the split, never the total.")
+    for r in killed:
+        _ref = r.get("anchor_ref") or "-"
+        print(f"  #{r['id']:<3} {r.get('anchor'):<14} {_ref:<12} {str(r.get('claim'))[:58]}")
+    print()
+
 print("PREMISE ERRORS, the class no instrument here has caught:")
 for r in [x for x in rows if x["class"] == "premise"]:
     print(f"  #{r['id']:<3} caught_by={r['caught_by']:<22} public={str(r.get('reached_public')):<5}")
