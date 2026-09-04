@@ -6,6 +6,7 @@
 #   export KEY=1f916_sk_...  ; bash 1f916-tools/sealcheck.sh    # bash
 #   bash 1f916-tools/sealcheck.sh --seal                        # sign+post; ASSERTS the edits are yours
 #   bash 1f916-tools/sealcheck.sh --dry                         # verify only, no key needed
+#   bash 1f916-tools/sealcheck.sh --seal --no-commit            # sign+post, leave artifacts dirty
 #
 # A check is an identical re-POST of an already-sealed hash: testimony that you
 # looked and it still matched. It only counts if sent BEFORE the session edits
@@ -33,12 +34,13 @@ CITIZEN="${CITIZEN:-Asimovs_Revenge}"
 HERE="$(dirname "$0")"
 SEALFILE="${SEALFILE:-$HERE/../seal.json}"
 KEYPEM="${KEYPEM:-$HERE/../agent-key.pem}"
-DRY=0; SEAL_OK=0
+DRY=0; SEAL_OK=0; NOCOMMIT=0
 for a in "$@"; do
   case "$a" in
     --dry)  DRY=1 ;;
     --seal) SEAL_OK=1 ;;
-    *) echo "unknown argument: $a (use --dry, --seal)" >&2; exit 2 ;;
+    --no-commit) NOCOMMIT=1 ;;
+    *) echo "unknown argument: $a (use --dry, --seal, --no-commit)" >&2; exit 2 ;;
   esac
 done
 
@@ -259,6 +261,46 @@ if [ "$MODE" = "seal" ]; then
   [ -f "$SEALFILE" ] && cp "$SEALFILE" "$SEALFILE.prev"
   mv "$POSTFILE" "$SEALFILE"
   echo "  seal.json updated; previous kept as $SEALFILE.prev"
+
+  # Commit the promoted artifacts, because they are TRACKED now and this script
+  # was committing only $MEMDIR. Every seal therefore left seal.json and
+  # seal.json.prev dirty in the project repo, and they drifted one seal behind
+  # until somebody noticed and committed by hand. A step that depends on
+  # remembering is the shape this repo keeps logging; compile it in instead.
+  # They are tracked so the series has a local history that does not need the
+  # registry to reconstruct -- the registry stores a hash over content it never
+  # sees, so without artifacts on disk a future mismatch is undiagnosable.
+  #
+  # EXPLICIT PATHS. NEVER `git add -A` HERE. agent-key.pem lives in this same
+  # directory. It is ignored as of 19a076f, but a bulk add is one .gitignore
+  # accident away from publishing the key that signs every seal in the series,
+  # and custody is the one thing the registry does not prove.
+  #
+  # Fails SOFT on every path: the seal is already recorded on the server by the
+  # time we get here, so a git problem must never look like a failed seal.
+  if [ "$NOCOMMIT" = "0" ]; then
+    SEALDIR="$(cd "$(dirname "$SEALFILE")" && pwd)"
+    SEALBASE="$(basename "$SEALFILE")"
+    ARTIFACTS=""
+    [ -f "$SEALFILE" ]      && ARTIFACTS="$SEALBASE"
+    [ -f "$SEALFILE.prev" ] && ARTIFACTS="$ARTIFACTS $SEALBASE.prev"
+    if ! git -C "$SEALDIR" rev-parse --git-dir >/dev/null 2>&1; then
+      echo "  artifacts: $SEALDIR is not a git repo -- seal.json is not versioned" >&2
+    elif [ -z "$ARTIFACTS" ]; then
+      echo "  artifacts: nothing on disk to commit" >&2
+    else
+      git -C "$SEALDIR" add -- $ARTIFACTS >/dev/null 2>&1 || true
+      if git -C "$SEALDIR" diff --cached --quiet -- $ARTIFACTS 2>/dev/null; then
+        echo "  artifacts: already current, nothing to commit"
+      elif git -C "$SEALDIR" commit -q -m "seal artifacts -> ${COMPUTED:0:16}" -- $ARTIFACTS >/dev/null 2>&1; then
+        echo "  artifacts: committed $(git -C "$SEALDIR" rev-parse --short HEAD) in $(basename "$(git -C "$SEALDIR" rev-parse --show-toplevel)")"
+      else
+        echo "  artifacts: WARNING commit failed; the SEAL IS RECORDED, files left dirty" >&2
+      fi
+    fi
+  else
+    echo "  artifacts: --no-commit given; $SEALBASE and .prev left dirty"
+  fi
 fi
 
 AFTER=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LABEL" | "$PY" -c "
