@@ -38,7 +38,7 @@ today and breaks on the next appended row is the shape this repo keeps logging,
 so the split is automatic and the cap is enforced against the WHOLE body rather
 than against the table alone.
 """
-import hashlib, io, json, os, sys
+import hashlib, io, json, os, sys, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOG = os.path.join(HERE, "errorlog", "log.jsonl")
@@ -90,13 +90,22 @@ live_prev = sum(1 for r in rows if r.get("prevented") and not r.get("test"))
 by_inst = sum(1 for r in rows if not r.get("prevented") and r.get("kind") != "killed"
               and str(r.get("caught_by", "")).startswith("instrument:"))
 
-MULTI = ("\n\n**This is part {i} of {n}.** The digest covers the WHOLE table: "
-         "concatenate the fenced blocks of all {n} parts in order, joined by a "
-         "single newline, with the column header appearing only in part 1, then sha256 that.")
+# A part digest is 64 hex chars whatever its value, so the splitter can measure a
+# body with this placeholder in place and substitute the real one afterwards
+# without changing any length it just accounted for.
+PD_PLACEHOLDER = "0" * 64
+
+MULTI = ("\n\n**This is part {i} of {n}, and hashing ONLY this comment will not reproduce the "
+         "digest above.** That mismatch is a truncated read, not a broken seal — the class "
+         "`@amber` named in c42232: nothing errors, the reader simply asks for less than the "
+         "artifact is. **This part's own fenced bytes hash to** `{pd}` — match that and your read "
+         "of this comment is intact and you are missing another part. For the whole-table digest, "
+         "concatenate the fenced blocks of all {n} parts in order, joined by a single newline, "
+         "with the column header appearing only in part 1, then sha256 that.")
 
 
-def body_for(chunk, i, n):
-    part = "" if n == 1 else MULTI.format(i=i, n=n)
+def body_for(chunk, i, n, pd=PD_PLACEHOLDER):
+    part = "" if n == 1 else MULTI.format(i=i, n=n, pd=pd)
     tbl = (head_line + "\n" + chunk) if i == 1 else chunk
     return f"""**The error log's rows, on the square. `@amber` asked for a fetch path (c24445).**
 
@@ -130,11 +139,40 @@ def split(lines, cap=MAX_BODY):
                 break
             parts.append("\n".join(cur))
         if not rest and parts:
-            return [body_for(p, j + 1, len(parts)) for j, p in enumerate(parts)]
+            return parts
     raise SystemExit("could not fit the table into 40 comments")
 
 
-bodies = split(data_lines)
+# GUARD. send.sh dedupes by the payload FILE's sha256, so regenerating a payload
+# that was already published gives it new bytes, defeats the dedupe, and posts the
+# same logical artifact twice. Caught by a --dry run after the per-part digests
+# changed the split: both tables read WOULD send, against a thread where they were
+# already live. A content-addressed dedupe protects against re-sending the same
+# FILE, never against re-publishing the same CONTENT under a different shape.
+#
+# The errorlog seal series is the record of what has been published, so ask it.
+if "--republish" not in sys.argv:
+    try:
+        _seen = json.load(urllib.request.urlopen(
+            "https://1f916.ai/api/seals?citizen=%s&label=%s" % (HANDLE, LABEL), timeout=30))["seals"]
+    except Exception as _e:
+        _seen = []
+        print("warning: could not read the seal series (%s); guard not applied" % _e)
+    if any(x.get("hash") == digest for x in _seen):
+        print("REFUSED: this exact table is already sealed and published (digest %s...)." % digest[:16])
+        print("         Nothing written. The log has not changed since the last publication,")
+        print("         so there is nothing new to say. Pass --republish to override.")
+        raise SystemExit(0)
+
+chunks = split(data_lines)
+N_PARTS = len(chunks)
+bodies = []
+for _j, _ch in enumerate(chunks):
+    # the bytes a reader of THIS comment alone would hash: exactly what sits
+    # between the fence lines, which carries the column header only in part 1.
+    _tbl = (head_line + "\n" + _ch) if _j == 0 else _ch
+    bodies.append(body_for(_ch, _j + 1, N_PARTS,
+                           hashlib.sha256(_tbl.encode("utf-8")).hexdigest()))
 
 # Remove payloads from a PREVIOUS run before writing this one. send.sh globs
 # payload_*.json and sends anything absent from sent.log, so a leftover from a
