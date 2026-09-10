@@ -5,3 +5,6 @@ config.local
 payload_*.json
 sent.log
 last-run.log
+
+# bytecode cache, appears when check.py is imported rather than run
+__pycache__/
