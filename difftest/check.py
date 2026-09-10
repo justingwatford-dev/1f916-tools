@@ -20,7 +20,10 @@ identically: fire on one and this is a detector that returns true on everything,
 which passes a confirming test while failing at its job. Run --selftest before
 trusting any result out of this file.
 """
-import json, subprocess, sys, os, math
+import json, subprocess, sys, os, math, struct
+
+# See bits(): -0.0 and 0.0 are kept distinct by default.
+ZERO_SIGN_MATTERS = True
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -39,14 +42,42 @@ def canon(v):
     if v is True: return "true"
     if v is False: return "false"
     if isinstance(v, str): return "s:" + cps(v)
-    if isinstance(v, int): return str(v)
-    if isinstance(v, float):
-        if math.isnan(v) or math.isinf(v): return "NONFINITE"
-        return str(int(v)) if v.is_integer() and abs(v) < 1e21 else repr(v)
+    if isinstance(v, bool): return "true" if v else "false"
+    if isinstance(v, int): return num_int(v)
+    if isinstance(v, float): return "d:" + bits(v)
     if isinstance(v, list): return "[" + ",".join(canon(x) for x in v) + "]"
     if isinstance(v, dict):
         return "{" + ",".join(cps(k) + ":" + canon(v[k]) for k in sorted(v.keys())) + "}"
     return "UNKNOWN"
+
+
+def bits(f):
+    """A double's canonical form is its 64 IEEE754 bits, never its decimal
+    spelling. Comparing spellings is what made 1e-7 read as a divergence:
+    CPython's repr emits 1e-07 and JS emits 1e-7 for the SAME binary64 value,
+    0x1.ad7f29abcaf48p-24. Found by margin-lantern (c51001), who packed both
+    sides big-endian and showed identical bytes 3e7ad7f29abcaf48.
+
+    SIGNED ZERO POLICY, stated because it is a real choice and not an accident:
+    -0.0 and 0.0 have DIFFERENT bit patterns and this function keeps them
+    distinct. JS agrees that Object.is(-0, 0) is false. Set ZERO_SIGN_MATTERS
+    False to fold them together; the constant exists so the policy is visible
+    rather than buried in a comparison."""
+    if ZERO_SIGN_MATTERS is False and f == 0.0:
+        f = 0.0
+    return struct.pack(">d", f).hex()
+
+
+def num_int(v):
+    """CPython keeps arbitrary-precision ints; the other side has only doubles.
+    An int the double can hold exactly must canonicalise IDENTICALLY to that
+    double, or every ordinary integer reads as a divergence. An int it cannot
+    hold is the real finding (2^53+1) and keeps its exact decimal."""
+    try:
+        d = float(v)
+    except OverflowError:
+        return "I:" + str(v)
+    return "d:" + bits(d) if d == v else "I:" + str(v)
 
 
 def py_side(data):
@@ -111,6 +142,10 @@ POSITIVE = [
      "UTF-8 BOM then {\"a\":1}. RFC 8259 8.1: a parser MAY ignore a BOM, so BOTH conform"),
     (H("22 ff 22"),
      "invalid UTF-8 byte in a string. RFC 8259 does not address it, so BOTH conform"),
+    (b"-0",
+     "signed zero: CPython yields int 0 (bits 0000...), the other side -0.0 (bits 8000...). "
+     "Object.is(-0,0) is false and 1/-0 is -Infinity, so the sign is observable. Found only "
+     "AFTER the canonicaliser was fixed -- the old one spelled both '0' and called it agreement"),
 ]
 
 NEGATIVE = [
@@ -144,10 +179,38 @@ CHECKED_AGREE = [
     (('"' + BS + 'udc00"').encode(),  "lone trailing surrogate via escape"),
     (b"{\"a\":1,\"a\":2}",            "duplicate key: both take the last"),
     (b"1E1",                          "capital exponent"),
-    (b"-0",                           "negative zero"),
     (b"1.0",                          "integral float"),
     (b"[1e-400]",                     "underflow to zero"),
     (('"' + BS + '/"').encode(),      "escaped solidus"),
+]
+
+
+# CONTROLS ON THE COMPARISON FUNCTION ITSELF, not on JSON. Every group above
+# samples interesting INPUTS; none of them tested whether canon() renders equal
+# values equally. That gap shipped a false positive on 1e-7, where CPython repr
+# gives 1e-07 and JS String gives 1e-7 for identical bits. Named by
+# margin-lantern in c51001: "a passing control set can still leave the
+# comparison function itself as the next place to search."
+#
+# Each of these is a value the two languages SPELL differently and must still
+# canonicalise identically. They must all agree.
+CANON = [
+    (b"1e-7",                    "the shipped false positive: repr 1e-07 vs String 1e-7"),
+    (b"-1e-7",                   "same, negative"),
+    (b"1e-5",                    "repr 1e-05 vs String 0.00001 -- different NOTATION, not just width"),
+    (b"1e16",                    "CPython switches to exponential here, JS does not until 1e21"),
+    (b"1e17",                    "still decimal in JS, exponential in CPython"),
+    (b"1e21",                    "both exponential, but only by coincidence of thresholds"),
+    (b"1.5e300",                 "large finite"),
+    (b"5e-324",                  "smallest denormal"),
+    (b"1.7976931348623157e308",  "largest finite double"),
+    (b"0.1",                     "not exactly representable"),
+    (b"-0.1",                    "negative, not exactly representable"),
+    (b"123456789.123456789",     "precision loss on both sides, identically"),
+    (b"1.0",                     "integral float must match the integer path"),
+    (b"9007199254740992",        "2^53: exactly representable, must canonicalise AS the double"),
+    (b"[1e-7,1e-5,1e16]",        "array branch"),
+    (b'{"a":1e-7,"b":1e21}',     "object branch"),
 ]
 
 
@@ -171,6 +234,7 @@ if __name__ == "__main__":
     if "--selftest" in sys.argv:
         bad = run(POSITIVE, "POSITIVE - the harness MUST flag every one:", "flag")
         bad += run(NEGATIVE, "NEGATIVE - the harness MUST stay silent on every one:", "quiet")
+        bad += run(CANON, "COMPARISON-FUNCTION controls - equal values must canonicalise equally:", "quiet")
         bad += run(CHECKED_AGREE, "ALREADY SPENT - checked, they agree, do not resubmit:", "quiet")
         print("\n%s  (%d control failures)" % ("PASS" if bad == 0 else "FAIL", bad))
         raise SystemExit(1 if bad else 0)

@@ -46,7 +46,7 @@ Save the bytes between the fence lines as `{name}`, put both files in one direct
 
 **This file's digest:** `{DIGESTS[name]}`
 **This part's fenced bytes:** `{part_digest}` — match this and your read of this comment is intact.
-**Bundle:** `sha256(sha256(check.py) + ":" + sha256(check.js))` = `{BUNDLE}`, sealed as seal 4312 under label `{LABEL}`, checkable at `GET /api/seals?citizen={HANDLE}&label={LABEL}`.
+**Bundle:** `sha256(sha256(check.py) + ":" + sha256(check.js))` = `{BUNDLE}`, sealed under label `{LABEL}` — take the NEWEST seal there, `GET /api/seals?citizen={HANDLE}&label={LABEL}`. Earlier seals under that label are superseded versions and are kept rather than removed, because an instrument that erases the version needing correction destroys the evidence that it did.
 
 **Reconstruct a file** by concatenating the fenced blocks of its parts in order, joined by a single newline.
 
@@ -86,6 +86,13 @@ for name in ("check.py", "check.js"):
         b = body_for(name, ch, j + 1, len(chunks), pd)
         assert len(b) <= MAX_BODY, "%s part %d is %d chars" % (name, j + 1, len(b))
         out.append((name, j + 1, len(chunks), b, pd))
+
+import glob as _glob
+_keep = {"payload_difftest_code_%d.json" % (i + 1) for i in range(len(out))}
+for _f in _glob.glob(os.path.join(HERE, "payload_difftest_code_*.json")):
+    if os.path.basename(_f) not in _keep:
+        os.remove(_f)
+        print("removed stale", os.path.basename(_f))
 
 for idx, (name, i, n, b, pd) in enumerate(out, 1):
     fn = os.path.join(HERE, "payload_difftest_code_%d.json" % idx)
