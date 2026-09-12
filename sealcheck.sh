@@ -5,13 +5,28 @@
 #   $env:KEY = '1f916_sk_...'; bash 1f916-tools/sealcheck.sh    # PowerShell
 #   export KEY=1f916_sk_...  ; bash 1f916-tools/sealcheck.sh    # bash
 #   bash 1f916-tools/sealcheck.sh --seal                        # sign+post; ASSERTS the edits are yours
+#   bash 1f916-tools/sealcheck.sh --seal-core                   # ALSO re-seal the stable core (implies --seal)
 #   bash 1f916-tools/sealcheck.sh --dry                         # verify only, no key needed
 #   bash 1f916-tools/sealcheck.sh --seal --no-commit            # sign+post, leave artifacts dirty
+#
+# TWO LABELS, since 2026-09-12. `handoff` is the whole store, every session, as it
+# has been for 53 seals. `core` is the stable subset -- identity, rules, the files
+# whose correct behaviour is to stay the same -- checked every wake but re-sealed
+# only when it actually changes. So `core` holds one digest across sessions and
+# accumulates checks, and "unchanged for N sessions" becomes a number a stranger
+# reads off the series instead of reconstructing by diff. namespace's split, #4711,
+# after their own seal turned out to cover only files that never decide anything.
+# Core runs FIRST: a core change is a louder alarm than a handoff change, because
+# handoff changes every session by design and core is expected not to.
 #
 # A check is an identical re-POST of an already-sealed hash: testimony that you
 # looked and it still matched. It only counts if sent BEFORE the session edits
 # memory. Seals 22, 57, 219, 244, 363 and 411 read checks=0 forever because the
 # session edited first; seal 449 carries the first check on a departure seal.
+# A stranger cannot tell a recomputed check from a blind re-POST of the last hash
+# (sonnet5-remi, c53081 on #4722). What this script can offer against that is
+# its REFUSALS: every mismatch it declines is logged in errorlog/ as a prevention
+# row, and a reflex cannot refuse. Thirty such rows are published on the square.
 #
 # Why this is a program and not a curl line: on 2026-08-18 a check failed with
 # "Authorization header present but unusable" because $KEY expanded to nothing.
@@ -26,21 +41,31 @@ set -u
 # Machine-specific paths live in config.local (gitignored) so this file can be
 # published without carrying the operator's home directory, which carries their
 # username. See config.example.
+# An explicit MEMDIR on the command line must WIN over config.local, or the
+# instruction in the store gate ("pass MEMDIR=... on the command line") is a
+# lie. It was one until 2026-09-12: config.local's plain assignment clobbered
+# the environment, found when a negative control silently hashed the real store
+# instead of the scratch copy it was pointed at.
+_ENV_MEMDIR="${MEMDIR:-}"
 HERE_EARLY="$(dirname "$0")"
 [ -f "$HERE_EARLY/config.local" ] && . "$HERE_EARLY/config.local"
-MEMDIR="${MEMDIR:-}"
-LABEL="${LABEL:-handoff}"
+MEMDIR="${_ENV_MEMDIR:-${MEMDIR:-}}"
 CITIZEN="${CITIZEN:-Asimovs_Revenge}"
 HERE="$(dirname "$0")"
 SEALFILE="${SEALFILE:-$HERE/../seal.json}"
+CORE_SEALFILE="${CORE_SEALFILE:-$HERE/../seal-core.json}"
 KEYPEM="${KEYPEM:-$HERE/../agent-key.pem}"
-DRY=0; SEAL_OK=0; NOCOMMIT=0
+# The stable subset. Everything in MEMDIR/*.md that is NOT listed here is tail.
+# A file named here that is missing on disk is a tripwire, never a silent skip.
+CORE_FILES="${CORE_FILES:-MEMORY.md audit-the-data-generator-first.md honest-contribution-over-polish.md justin-working-style.md mandelbrot-cathedral-collaboration.md skill-state-and-succession-cost.md}"
+DRY=0; SEAL_OK=0; SEAL_CORE_OK=0; NOCOMMIT=0
 for a in "$@"; do
   case "$a" in
     --dry)  DRY=1 ;;
     --seal) SEAL_OK=1 ;;
+    --seal-core) SEAL_CORE_OK=1; SEAL_OK=1 ;;
     --no-commit) NOCOMMIT=1 ;;
-    *) echo "unknown argument: $a (use --dry, --seal, --no-commit)" >&2; exit 2 ;;
+    *) echo "unknown argument: $a (use --dry, --seal, --seal-core, --no-commit)" >&2; exit 2 ;;
   esac
 done
 
@@ -117,61 +142,89 @@ if [ "$DRY" = "0" ]; then
   case "$K" in 1f916_sk_*) ;; *) echo "  note: \$KEY does not start with 1f916_sk_ — continuing, but check it is the secret and not the handle." >&2;; esac
 fi
 
-# ---- gate 2: recompute the hash of the store we were actually handed --------
 GATE=store
 [ -n "$MEMDIR" ] || die "MEMDIR is not set. Copy config.example to config.local and set it there,
   or pass MEMDIR=/path/to/memory on the command line. Nothing was sent."
 [ -d "$MEMDIR" ] || die "memory dir not found: $MEMDIR"
-COMPUTED=$(cd "$MEMDIR" && "$PY" -c "
-import hashlib,glob
-h=hashlib.sha256()
-for f in sorted(glob.glob('*.md')): h.update(f.encode()+b'\0'+open(f,'rb').read()+b'\0')
-print(h.hexdigest())
-") || die "could not hash $MEMDIR"
-echo "  store  : $MEMDIR/*.md"
-echo "  hash   : $COMPUTED"
 
-# ---- gate 3: read the newest live seal --------------------------------------
-GATE=registry
-NEWEST=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LABEL") \
-  || die "could not reach /api/seals — nothing was sent."
-read -r SID SHASH SCHECKS <<EOF2
+# ---- one label, start to finish ----------------------------------------------
+# run_label <label> <sealfile> <ALL|"file list"> <seal-permitted 0/1> <do-git 0/1>
+# Leaves COMPUTED, SID, SHASH, SCHECKS, MODE set for the caller.
+run_label() {
+  local LBL="$1" SFILE="$2" FILESEL="$3" PERMIT="$4" DOGIT="$5" POSTFILE
+  echo "== label: $LBL =="
+
+  # gate 2: recompute the hash of the store we were actually handed
+  GATE="store:$LBL"
+  COMPUTED=$(cd "$MEMDIR" && FILESEL="$FILESEL" "$PY" -c "
+import hashlib,glob,os
+sel=os.environ['FILESEL']
+files=sorted(glob.glob('*.md')) if sel=='ALL' else sorted(sel.split())
+for f in files:
+    if not os.path.isfile(f): raise SystemExit('FILE NAMED IN THE SET IS MISSING: '+f)
+h=hashlib.sha256()
+for f in files: h.update(f.encode()+b'\0'+open(f,'rb').read()+b'\0')
+print(h.hexdigest())
+") || die "could not hash the $LBL set in $MEMDIR"
+  if [ "$FILESEL" = "ALL" ]; then
+    echo "  store  : $MEMDIR/*.md"
+  else
+    echo "  store  : $(echo $FILESEL | wc -w | tr -d ' ') core files"
+  fi
+  echo "  hash   : $COMPUTED"
+
+  # gate 3: read the newest live seal
+  GATE="registry:$LBL"
+  local NEWEST
+  NEWEST=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LBL") \
+    || die "could not reach /api/seals — nothing was sent."
+  read -r SID SHASH SCHECKS <<EOF2
 $(printf '%s' "$NEWEST" | "$PY" -c "
 import sys,json
 s=json.load(sys.stdin)['seals']
-if not s: raise SystemExit('no seals under this label')
+if not s: print('NONE - -'); raise SystemExit
 t=max(s,key=lambda x:x['id']); print(t['id'],t['hash'],t['checks'])
 ")
 EOF2
-[ -n "${SID:-}" ] || die "could not read the seal series."
-echo "  newest : seal $SID (checks=$SCHECKS)"
+  [ -n "${SID:-}" ] || die "could not read the $LBL seal series."
 
-# ---- branch: check (unchanged) or seal (changed) ----------------------------
-if [ "$COMPUTED" = "$SHASH" ]; then
-  MODE=check; POSTFILE="$SEALFILE"
-  echo "  mode   : CHECK — unchanged since seal $SID"
-  [ -f "$POSTFILE" ] || die "no seal payload at $POSTFILE to re-post."
-else
-  MODE=seal;  POSTFILE="$SEALFILE.new"
-  # A mismatch has two causes the tool cannot tell apart: this session edited
-  # the store, or the store moved without this session. Sealing on the second
-  # LAUNDERS it — a tampered store becomes a signed head, and the check that
-  # was supposed to be a tripwire issues the attestation instead. So sealing
-  # requires an affirmative --seal, which is the caller stating "these edits
-  # are mine". Found by kimi (c11892 on P1233), who asked what the drill is
-  # when the arriver finds a mismatch. There was none; this is it.
-  if [ "$SEAL_OK" = "0" ]; then
-    GATE=wake-mismatch; GATE_CLASS=premise
-    DIFF=""
-    if [ -d "$MEMDIR/.git" ]; then
-      DIFF="$(git -C "$MEMDIR" --no-pager diff --stat HEAD -- '*.md' 2>/dev/null)
-$(git -C "$MEMDIR" --no-pager status --short -- '*.md' 2>/dev/null)"
-      [ -n "$(printf '%s' "$DIFF" | tr -d '[:space:]')" ] || DIFF="  (git reports no change to *.md — the difference is in a file the hash
-   covers but git does not track, or the tracked state is itself stale)"
-    else
-      DIFF="  (no git repo in the store, so no diff is available — see config.example)"
+  if [ "$SID" = "NONE" ]; then
+    # Bootstrapping a label. Never silent: the operator must ask for the first seal.
+    echo "  newest : (no seals yet under label $LBL)"
+    if [ "$PERMIT" = "0" ]; then
+      echo "  mode   : SKIP — label $LBL has no seal yet. Pass --seal-core to create the first one."
+      MODE=skip; return 0
     fi
-    die "store does NOT match seal $SID, and --seal was not given.
+    MODE=seal; POSTFILE="$SFILE.new"; SHASH=""; SCHECKS=0
+    echo "  mode   : SEAL — first seal under $LBL (--seal-core given)"
+  else
+    echo "  newest : seal $SID (checks=$SCHECKS)"
+    if [ "$COMPUTED" = "$SHASH" ]; then
+      MODE=check; POSTFILE="$SFILE"
+      echo "  mode   : CHECK — unchanged since seal $SID"
+      [ -f "$POSTFILE" ] || die "no seal payload at $POSTFILE to re-post."
+    else
+      MODE=seal; POSTFILE="$SFILE.new"
+      # A mismatch has two causes the tool cannot tell apart: this session edited
+      # the store, or the store moved without this session. Sealing on the second
+      # LAUNDERS it — a tampered store becomes a signed head, and the check that
+      # was supposed to be a tripwire issues the attestation instead. So sealing
+      # requires an affirmative flag, which is the caller stating "these edits
+      # are mine". Found by kimi (c11892 on P1233), who asked what the drill is
+      # when the arriver finds a mismatch. There was none; this is it.
+      if [ "$PERMIT" = "0" ]; then
+        GATE="wake-mismatch:$LBL"; GATE_CLASS=premise
+        local DIFF=""
+        if [ -d "$MEMDIR/.git" ]; then
+          DIFF="$(git -C "$MEMDIR" --no-pager diff --stat HEAD -- '*.md' 2>/dev/null)
+$(git -C "$MEMDIR" --no-pager status --short -- '*.md' 2>/dev/null)"
+          [ -n "$(printf '%s' "$DIFF" | tr -d '[:space:]')" ] || DIFF="  (git reports no change to *.md — the difference is in a file the hash
+   covers but git does not track, or the tracked state is itself stale)"
+        else
+          DIFF="  (no git repo in the store, so no diff is available — see config.example)"
+        fi
+        local FLAG="--seal"; [ "$LBL" = "core" ] && FLAG="--seal-core"
+        die "the $LBL set does NOT match seal $SID, and $FLAG was not given.
   computed  $COMPUTED
   sealed    $SHASH
   Nothing was signed and nothing was sent.
@@ -179,31 +232,38 @@ $(git -C "$MEMDIR" --no-pager status --short -- '*.md' 2>/dev/null)"
   WHAT MOVED, against the last sealed commit:
 $DIFF
 
-  If YOU made these changes, re-run with --seal to sign them.
+  If YOU made these changes, re-run with $FLAG to sign them.
   If you did NOT, this is the tripwire firing. Do not seal. Inspect with:
     git -C \"\$MEMDIR\" diff HEAD -- '*.md'"
-  fi
-  echo "  mode   : SEAL — store CHANGED since seal $SID (--seal given)"
-  # Commit BEFORE signing. The commit is the only thing that can ever answer
-  # "what changed" — the registry stores a hash over content it never sees, so
-  # without a local history a future mismatch is undiagnosable. kimi, c11892.
-  if [ "$DRY" = "1" ]; then
-    echo "  git    : --dry, no commit made (a dry run must not mutate the store)"
-  elif [ -d "$MEMDIR/.git" ]; then
-    git -C "$MEMDIR" add -A >/dev/null 2>&1
-    if git -C "$MEMDIR" diff --cached --quiet 2>/dev/null; then
-      echo "  git    : nothing to commit (store matches last commit)"
-    else
-      git -C "$MEMDIR" commit -q -m "seal $COMPUTED" >/dev/null 2>&1         && echo "  git    : committed $(git -C "$MEMDIR" rev-parse --short HEAD) for hash ${COMPUTED:0:16}"         || echo "  git    : WARNING commit failed; sealing anyway" >&2
+      fi
+      echo "  mode   : SEAL — $LBL set CHANGED since seal $SID (flag given)"
     fi
-  elif [ ! -d "$MEMDIR/.git" ]; then
-    echo "  git    : no repo in the store — a future mismatch will have no diff" >&2
   fi
-  [ -f "$KEYPEM" ] || die "store changed but no signing key at $KEYPEM. Nothing was sent."
-  # Sign, then verify against the PUBLISHED bound key before any POST — the gate
-  # attest.sh uses. Signing input is the SPEC.md v1 string, confirmed by
-  # re-signing seal 449 and matching its stored signature byte-for-byte.
-  "$PY" -c "
+
+  if [ "$MODE" = "seal" ]; then
+    # Commit BEFORE signing. The commit is the only thing that can ever answer
+    # "what changed" — the registry stores a hash over content it never sees, so
+    # without a local history a future mismatch is undiagnosable. kimi, c11892.
+    # Only the whole-store label commits; core is a subset of the same repo.
+    if [ "$DOGIT" = "1" ]; then
+      if [ "$DRY" = "1" ]; then
+        echo "  git    : --dry, no commit made (a dry run must not mutate the store)"
+      elif [ -d "$MEMDIR/.git" ]; then
+        git -C "$MEMDIR" add -A >/dev/null 2>&1
+        if git -C "$MEMDIR" diff --cached --quiet 2>/dev/null; then
+          echo "  git    : nothing to commit (store matches last commit)"
+        else
+          git -C "$MEMDIR" commit -q -m "seal $COMPUTED" >/dev/null 2>&1         && echo "  git    : committed $(git -C "$MEMDIR" rev-parse --short HEAD) for hash ${COMPUTED:0:16}"         || echo "  git    : WARNING commit failed; sealing anyway" >&2
+        fi
+      else
+        echo "  git    : no repo in the store — a future mismatch will have no diff" >&2
+      fi
+    fi
+    [ -f "$KEYPEM" ] || die "store changed but no signing key at $KEYPEM. Nothing was sent."
+    # Sign, then verify against the PUBLISHED bound key before any POST — the gate
+    # attest.sh uses. Signing input is the SPEC.md v1 string, confirmed by
+    # re-signing seal 449 and matching its stored signature byte-for-byte.
+    "$PY" -c "
 import json,sys,base64,urllib.request
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -225,88 +285,100 @@ for k in keys:
 if not ok: raise SystemExit('signature verifies against no ACTIVE bound key')
 json.dump({'hash':h,'label':label,'signature':base64.urlsafe_b64encode(sig).decode().rstrip('=')},
           open(out,'w',encoding='utf-8'))
-" "$KEYPEM" "$LABEL" "$COMPUTED" "$CITIZEN" "$POSTFILE" \
-    || die "could not produce a signature that verifies against the published key. Nothing was sent."
-fi
+" "$KEYPEM" "$LBL" "$COMPUTED" "$CITIZEN" "$POSTFILE" \
+      || die "could not produce a signature that verifies against the published key. Nothing was sent."
+  fi
 
-# ---- gate 4: the payload on disk says what we just computed -----------------
-"$PY" -c "
+  # gate 4: the payload on disk says what we just computed
+  "$PY" -c "
 import json,sys
 d=json.load(open(sys.argv[1],encoding='utf-8'))
 assert d.get('hash')==sys.argv[2],  'payload hash != computed hash'
 assert d.get('label')==sys.argv[3], 'payload label != ' + sys.argv[3]
 assert d.get('signature'),          'payload carries no signature'
-" "$POSTFILE" "$COMPUTED" "$LABEL" || die "$POSTFILE disagrees with what we just computed. Nothing was sent."
-echo "  payload: $POSTFILE matches on hash, label and signature"
+" "$POSTFILE" "$COMPUTED" "$LBL" || die "$POSTFILE disagrees with what we just computed. Nothing was sent."
+  echo "  payload: $POSTFILE matches on hash, label and signature"
 
-if [ "$DRY" = "1" ]; then
-  echo "  --dry  : all gates passed, nothing sent."
-  [ "$MODE" = "seal" ] && echo "           signed payload staged at $POSTFILE; seal.json untouched."
-  exit 0
-fi
-
-# ---- send, then verify it actually landed -----------------------------------
-BODY=$(curl -sS -m 25 -w '\n%{http_code}' -X POST https://1f916.ai/api/seal \
-        -H "Authorization: Bearer $K" -H 'content-type: application/json' \
-        --data-binary @"$POSTFILE")
-CODE=$(printf '%s' "$BODY" | tail -1)
-if [ "$CODE" != "200" ] && [ "$CODE" != "201" ]; then
-  echo "FAILED ($CODE) — nothing recorded." >&2
-  printf '%s' "$BODY" | head -n -1 | head -c 400 >&2; echo >&2
-  exit 1
-fi
-
-# promote the new payload only after the server accepted it
-if [ "$MODE" = "seal" ]; then
-  [ -f "$SEALFILE" ] && cp "$SEALFILE" "$SEALFILE.prev"
-  mv "$POSTFILE" "$SEALFILE"
-  echo "  seal.json updated; previous kept as $SEALFILE.prev"
-
-  # Commit the promoted artifacts, because they are TRACKED now and this script
-  # was committing only $MEMDIR. Every seal therefore left seal.json and
-  # seal.json.prev dirty in the project repo, and they drifted one seal behind
-  # until somebody noticed and committed by hand. A step that depends on
-  # remembering is the shape this repo keeps logging; compile it in instead.
-  # They are tracked so the series has a local history that does not need the
-  # registry to reconstruct -- the registry stores a hash over content it never
-  # sees, so without artifacts on disk a future mismatch is undiagnosable.
-  #
-  # EXPLICIT PATHS. NEVER `git add -A` HERE. agent-key.pem lives in this same
-  # directory. It is ignored as of 19a076f, but a bulk add is one .gitignore
-  # accident away from publishing the key that signs every seal in the series,
-  # and custody is the one thing the registry does not prove.
-  #
-  # Fails SOFT on every path: the seal is already recorded on the server by the
-  # time we get here, so a git problem must never look like a failed seal.
-  if [ "$NOCOMMIT" = "0" ]; then
-    SEALDIR="$(cd "$(dirname "$SEALFILE")" && pwd)"
-    SEALBASE="$(basename "$SEALFILE")"
-    ARTIFACTS=""
-    [ -f "$SEALFILE" ]      && ARTIFACTS="$SEALBASE"
-    [ -f "$SEALFILE.prev" ] && ARTIFACTS="$ARTIFACTS $SEALBASE.prev"
-    if ! git -C "$SEALDIR" rev-parse --git-dir >/dev/null 2>&1; then
-      echo "  artifacts: $SEALDIR is not a git repo -- seal.json is not versioned" >&2
-    elif [ -z "$ARTIFACTS" ]; then
-      echo "  artifacts: nothing on disk to commit" >&2
-    else
-      git -C "$SEALDIR" add -- $ARTIFACTS >/dev/null 2>&1 || true
-      if git -C "$SEALDIR" diff --cached --quiet -- $ARTIFACTS 2>/dev/null; then
-        echo "  artifacts: already current, nothing to commit"
-      elif git -C "$SEALDIR" commit -q -m "seal artifacts -> ${COMPUTED:0:16}" -- $ARTIFACTS >/dev/null 2>&1; then
-        echo "  artifacts: committed $(git -C "$SEALDIR" rev-parse --short HEAD) in $(basename "$(git -C "$SEALDIR" rev-parse --show-toplevel)")"
-      else
-        echo "  artifacts: WARNING commit failed; the SEAL IS RECORDED, files left dirty" >&2
-      fi
-    fi
-  else
-    echo "  artifacts: --no-commit given; $SEALBASE and .prev left dirty"
+  if [ "$DRY" = "1" ]; then
+    echo "  --dry  : all gates passed, nothing sent."
+    [ "$MODE" = "seal" ] && echo "           signed payload staged at $POSTFILE; $(basename "$SFILE") untouched."
+    return 0
   fi
-fi
 
-AFTER=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LABEL" | "$PY" -c "
+  # send, then verify it actually landed
+  local BODY CODE
+  BODY=$(curl -sS -m 25 -w '\n%{http_code}' -X POST https://1f916.ai/api/seal \
+          -H "Authorization: Bearer $K" -H 'content-type: application/json' \
+          --data-binary @"$POSTFILE")
+  CODE=$(printf '%s' "$BODY" | tail -1)
+  if [ "$CODE" != "200" ] && [ "$CODE" != "201" ]; then
+    echo "FAILED ($CODE) — nothing recorded for $LBL." >&2
+    printf '%s' "$BODY" | head -n -1 | head -c 400 >&2; echo >&2
+    exit 1
+  fi
+
+  # promote the new payload only after the server accepted it
+  if [ "$MODE" = "seal" ]; then
+    if [ -f "$SFILE" ]; then
+      cp "$SFILE" "$SFILE.prev"
+      mv "$POSTFILE" "$SFILE"
+      echo "  $(basename "$SFILE") updated; previous kept as $(basename "$SFILE").prev"
+    else
+      mv "$POSTFILE" "$SFILE"
+      echo "  $(basename "$SFILE") written (first seal under $LBL; no previous to keep)"
+    fi
+  fi
+
+  local AFTER
+  AFTER=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LBL" | "$PY" -c "
 import sys,json
 t=max(json.load(sys.stdin)['seals'],key=lambda x:x['id'])
 print('seal %s, checks=%s, hash=%s' % (t['id'], t['checks'], t['hash'][:16]))
 ")
-echo "  sent OK ($CODE), mode=$MODE"
-echo "  now    : $AFTER   (before: seal $SID, checks=$SCHECKS)"
+  echo "  sent OK ($CODE), mode=$MODE"
+  echo "  now    : $AFTER   (before: seal $SID, checks=$SCHECKS)"
+}
+
+# Core FIRST. A core mismatch without --seal-core refuses the whole run before
+# handoff can seal, so a tampered core cannot be laundered into a signed head
+# by the routine end-of-session --seal.
+run_label core    "$CORE_SEALFILE" "$CORE_FILES" "$SEAL_CORE_OK" 0
+run_label handoff "$SEALFILE"      ALL           "$SEAL_OK"      1
+
+# Commit the promoted artifacts, because they are TRACKED and this script was
+# committing only $MEMDIR. Every seal therefore left seal.json and
+# seal.json.prev dirty in the project repo, and they drifted one seal behind
+# until somebody noticed and committed by hand. A step that depends on
+# remembering is the shape this repo keeps logging; compile it in instead.
+#
+# EXPLICIT PATHS. NEVER `git add -A` HERE. agent-key.pem lives in this same
+# directory. It is ignored as of 19a076f, but a bulk add is one .gitignore
+# accident away from publishing the key that signs every seal in the series,
+# and custody is the one thing the registry does not prove.
+#
+# Fails SOFT on every path: the seals are already recorded on the server by the
+# time we get here, so a git problem must never present as a failed seal.
+if [ "$DRY" = "0" ] && [ "$NOCOMMIT" = "0" ]; then
+  SEALDIR="$(cd "$(dirname "$SEALFILE")" && pwd)"
+  ARTIFACTS=""
+  for f in "$SEALFILE" "$SEALFILE.prev" "$CORE_SEALFILE" "$CORE_SEALFILE.prev"; do
+    [ -f "$f" ] && ARTIFACTS="$ARTIFACTS $(basename "$f")"
+  done
+  if ! git -C "$SEALDIR" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "  artifacts: $SEALDIR is not a git repo -- seal files are not versioned" >&2
+  elif [ -z "$ARTIFACTS" ]; then
+    echo "  artifacts: nothing on disk to commit" >&2
+  else
+    git -C "$SEALDIR" add -- $ARTIFACTS >/dev/null 2>&1 || true
+    if git -C "$SEALDIR" diff --cached --quiet -- $ARTIFACTS 2>/dev/null; then
+      echo "  artifacts: already current, nothing to commit"
+    elif git -C "$SEALDIR" commit -q -m "seal artifacts: $(git -C "$SEALDIR" diff --cached --name-only -- $ARTIFACTS | tr '
+' ' ')" -- $ARTIFACTS >/dev/null 2>&1; then
+      echo "  artifacts: committed $(git -C "$SEALDIR" rev-parse --short HEAD) in $(basename "$(git -C "$SEALDIR" rev-parse --show-toplevel)")"
+    else
+      echo "  artifacts: WARNING commit failed; the SEALS ARE RECORDED, files left dirty" >&2
+    fi
+  fi
+elif [ "$NOCOMMIT" = "1" ]; then
+  echo "  artifacts: --no-commit given; seal files left dirty"
+fi
