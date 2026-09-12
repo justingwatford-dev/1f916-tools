@@ -63,16 +63,41 @@ KEYPEM="${KEYPEM:-$HERE/../agent-key.pem}"
 # The stable subset. Everything in MEMDIR/*.md that is NOT listed here is tail.
 # A file named here that is missing on disk is a tripwire, never a silent skip.
 CORE_FILES="${CORE_FILES:-MEMORY.md audit-the-data-generator-first.md honest-contribution-over-polish.md justin-working-style.md mandelbrot-cathedral-collaboration.md skill-state-and-succession-cost.md}"
-DRY=0; SEAL_OK=0; SEAL_CORE_OK=0; NOCOMMIT=0
+DRY=0; SEAL_OK=0; SEAL_CORE_OK=0; NOCOMMIT=0; EXPECT=""
 for a in "$@"; do
   case "$a" in
     --dry)  DRY=1 ;;
     --seal) SEAL_OK=1 ;;
     --seal-core) SEAL_CORE_OK=1; SEAL_OK=1 ;;
     --no-commit) NOCOMMIT=1 ;;
-    *) echo "unknown argument: $a (use --dry, --seal, --seal-core, --no-commit)" >&2; exit 2 ;;
+    --expect=*) EXPECT="${a#--expect=}" ;;
+    --expect) echo "UNGUARDED: --expect given with no value. Say what each label should do, e.g. --expect=core=check,handoff=seal,link=seal" >&2; exit 2 ;;
+    *) echo "unknown argument: $a (use --dry, --seal, --seal-core, --no-commit, --expect=...)" >&2; exit 2 ;;
   esac
 done
+# --expect makes the prediction an ARGUMENT the machine compares, not a note the
+# operator compares by eye -- "an eye that has just written down the expected
+# answer is the worst available instrument for noticing it did not arrive"
+# (namespace, c56893 on #4711). Predict the machine-comparable field: each
+# label's MODE, check|seal|skip. A wrong prediction exits 6, distinct from 0
+# (held) and 4 (the tripwire): it means YOUR MODEL of the store is wrong, which
+# is a different repair from the store being wrong. namespace used 5 for this;
+# 5 here already means "no python found", so 6.
+expected_mode() {  # expected_mode <label> -> prints the predicted mode or nothing
+  printf '%s' "$EXPECT" | tr ',' '
+' | awk -F= -v l="$1" '$1==l {print $2}'
+}
+PRED_WRONG=""
+note_prediction() {  # note_prediction <label> <actual mode>
+  local want; want="$(expected_mode "$1")"
+  [ -n "$want" ] || return 0
+  if [ "$want" = "$2" ]; then
+    echo "  predict: $1=$2 — held, as stated before the run"
+  else
+    echo "  predict: $1 expected=$want actual=$2 — PREDICTION WRONG"
+    PRED_WRONG="$PRED_WRONG $1"
+  fi
+}
 
 # A refusal is a PREVENTED error. It leaves no row in the error log by
 # construction, which made the instruments look like they contributed nothing
@@ -362,11 +387,12 @@ print('seal %s, checks=%s, hash=%s' % (t['id'], t['checks'], t['hash'][:16]))
 # handoff can seal, so a tampered core cannot be laundered into a signed head
 # by the routine end-of-session --seal.
 run_label core    "$CORE_SEALFILE" "$CORE_FILES" "$SEAL_CORE_OK" 0
-CORE_HASH="$COMPUTED"
+CORE_HASH="$COMPUTED"; note_prediction core "$MODE"
 run_label handoff "$SEALFILE"      ALL           "$SEAL_OK"      1
-HANDOFF_HASH="$COMPUTED"
+HANDOFF_HASH="$COMPUTED"; note_prediction handoff "$MODE"
 # Third: the binding. Moves iff handoff moves, so it inherits --seal.
 run_label link    "$LINK_SEALFILE" LINK          "$SEAL_OK"      0
+note_prediction link "$MODE"
 
 # Commit the promoted artifacts, because they are TRACKED and this script was
 # committing only $MEMDIR. Every seal therefore left seal.json and
@@ -404,4 +430,12 @@ if [ "$DRY" = "0" ] && [ "$NOCOMMIT" = "0" ]; then
   fi
 elif [ "$NOCOMMIT" = "1" ]; then
   echo "  artifacts: --no-commit given; seal files left dirty"
+fi
+
+# The prediction verdict comes LAST, after everything was sent and committed:
+# a wrong prediction must never look like a failed seal. Exit 6 says "your model
+# of the store was wrong"; the seals themselves are already recorded.
+if [ -n "$PRED_WRONG" ]; then
+  echo "PREDICTION WRONG on:$PRED_WRONG — something upstream is not what you think. Seals were still recorded." >&2
+  exit 6
 fi
