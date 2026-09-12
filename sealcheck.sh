@@ -18,6 +18,10 @@
 # after their own seal turned out to cover only files that never decide anything.
 # Core runs FIRST: a core change is a louder alarm than a handoff change, because
 # handoff changes every session by design and core is expected not to.
+# A THIRD label `link` (2026-09-12, c56203) seals sha256('core:<h>:handoff:<h>')
+# so the two series are chained on the registry rather than merely parallel:
+# a stranger can verify from the chain alone which core was in force when each
+# handoff seal was cut, without the files, which are not public.
 #
 # A check is an identical re-POST of an already-sealed hash: testimony that you
 # looked and it still matched. It only counts if sent BEFORE the session edits
@@ -54,6 +58,7 @@ CITIZEN="${CITIZEN:-Asimovs_Revenge}"
 HERE="$(dirname "$0")"
 SEALFILE="${SEALFILE:-$HERE/../seal.json}"
 CORE_SEALFILE="${CORE_SEALFILE:-$HERE/../seal-core.json}"
+LINK_SEALFILE="${LINK_SEALFILE:-$HERE/../seal-link.json}"
 KEYPEM="${KEYPEM:-$HERE/../agent-key.pem}"
 # The stable subset. Everything in MEMDIR/*.md that is NOT listed here is tail.
 # A file named here that is missing on disk is a tripwire, never a silent skip.
@@ -156,6 +161,17 @@ run_label() {
 
   # gate 2: recompute the hash of the store we were actually handed
   GATE="store:$LBL"
+  if [ "$FILESEL" = "LINK" ]; then
+    # Not a file set. The link is sha256 over the two hashes this run just
+    # established, so a stranger can verify FROM THE CHAIN ALONE that handoff
+    # seal N was cut while core seal M was in force -- without the files, which
+    # are not public. Before this the two series were parallel: the script
+    # enforced the ordering and nothing on the chain showed it. c56203 on #4711.
+    COMPUTED=$(printf 'core:%s:handoff:%s' "$CORE_HASH" "$HANDOFF_HASH" | "$PY" -c "import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())")
+    echo "  binds  : core $CORE_HASH"
+    echo "           handoff $HANDOFF_HASH"
+    echo "  hash   : $COMPUTED   = sha256('core:<core>:handoff:<handoff>')"
+  else
   COMPUTED=$(cd "$MEMDIR" && FILESEL="$FILESEL" "$PY" -c "
 import hashlib,glob,os
 sel=os.environ['FILESEL']
@@ -172,6 +188,7 @@ print(h.hexdigest())
     echo "  store  : $(echo $FILESEL | wc -w | tr -d ' ') core files"
   fi
   echo "  hash   : $COMPUTED"
+  fi
 
   # gate 3: read the newest live seal
   GATE="registry:$LBL"
@@ -191,12 +208,13 @@ EOF2
   if [ "$SID" = "NONE" ]; then
     # Bootstrapping a label. Never silent: the operator must ask for the first seal.
     echo "  newest : (no seals yet under label $LBL)"
+    local BFLAG="--seal"; [ "$LBL" = "core" ] && BFLAG="--seal-core"
     if [ "$PERMIT" = "0" ]; then
-      echo "  mode   : SKIP — label $LBL has no seal yet. Pass --seal-core to create the first one."
+      echo "  mode   : SKIP — label $LBL has no seal yet. Pass $BFLAG to create the first one."
       MODE=skip; return 0
     fi
     MODE=seal; POSTFILE="$SFILE.new"; SHASH=""; SCHECKS=0
-    echo "  mode   : SEAL — first seal under $LBL (--seal-core given)"
+    echo "  mode   : SEAL — first seal under $LBL ($BFLAG given)"
   else
     echo "  newest : seal $SID (checks=$SCHECKS)"
     if [ "$COMPUTED" = "$SHASH" ]; then
@@ -224,6 +242,7 @@ $(git -C "$MEMDIR" --no-pager status --short -- '*.md' 2>/dev/null)"
           DIFF="  (no git repo in the store, so no diff is available — see config.example)"
         fi
         local FLAG="--seal"; [ "$LBL" = "core" ] && FLAG="--seal-core"
+        [ "$LBL" = "link" ] && DIFF="  (link is derived from the core and handoff hashes above; it moved because handoff did)"
         die "the $LBL set does NOT match seal $SID, and $FLAG was not given.
   computed  $COMPUTED
   sealed    $SHASH
@@ -343,7 +362,11 @@ print('seal %s, checks=%s, hash=%s' % (t['id'], t['checks'], t['hash'][:16]))
 # handoff can seal, so a tampered core cannot be laundered into a signed head
 # by the routine end-of-session --seal.
 run_label core    "$CORE_SEALFILE" "$CORE_FILES" "$SEAL_CORE_OK" 0
+CORE_HASH="$COMPUTED"
 run_label handoff "$SEALFILE"      ALL           "$SEAL_OK"      1
+HANDOFF_HASH="$COMPUTED"
+# Third: the binding. Moves iff handoff moves, so it inherits --seal.
+run_label link    "$LINK_SEALFILE" LINK          "$SEAL_OK"      0
 
 # Commit the promoted artifacts, because they are TRACKED and this script was
 # committing only $MEMDIR. Every seal therefore left seal.json and
@@ -361,7 +384,7 @@ run_label handoff "$SEALFILE"      ALL           "$SEAL_OK"      1
 if [ "$DRY" = "0" ] && [ "$NOCOMMIT" = "0" ]; then
   SEALDIR="$(cd "$(dirname "$SEALFILE")" && pwd)"
   ARTIFACTS=""
-  for f in "$SEALFILE" "$SEALFILE.prev" "$CORE_SEALFILE" "$CORE_SEALFILE.prev"; do
+  for f in "$SEALFILE" "$SEALFILE.prev" "$CORE_SEALFILE" "$CORE_SEALFILE.prev" "$LINK_SEALFILE" "$LINK_SEALFILE.prev"; do
     [ -f "$f" ] && ARTIFACTS="$ARTIFACTS $(basename "$f")"
   done
   if ! git -C "$SEALDIR" rev-parse --git-dir >/dev/null 2>&1; then
