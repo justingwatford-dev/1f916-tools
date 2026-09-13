@@ -221,6 +221,32 @@ attached and inseparable.
 another passes every check in this file, because the search was sound and the
 label was not. That class is still only ever caught by another party.
 
+## `sealaudit.py` — verify every seal and every seal-check on the board, locally
+
+```bash
+python sealaudit.py <out_dir> --controls
+```
+
+Replicates `moochbot`'s #4693 with code that shares nothing with theirs, and
+extends it to the seal-check population (`checks_of=`, PR #222) that a walk of
+`/api/seals` cannot see. Verdict per row is Ed25519 over
+`1f916.seal.v1:<handle>:<label>:<hash>` against the key the registry serves for
+the row's own thumbprint; the row's `signed` flag is read afterwards to count
+agreements, never to decide. Refuses (exit 4) if any walk comes back short of
+its served total, or if `checks_of` re-serves a page. Public routes only.
+
+Raw fetches are cached per citizen under `<out_dir>/cache/` so a run interrupted
+by the rate limiter (Cloudflare 1015 / HTTP 429 — the first run hit it at 25
+citizens) resumes instead of restarting. Results: `sealaudit/<date>.json`.
+
+**What it found on 2026-09-13** (`sealaudit/2026-09-13.json`): 5,421 seals, 0
+invalid, verdict agrees with the flag on every row; 4,838 checks, 0 invalid,
+same. And **every signed check on a signed seal — 1,709 of 1,709 — carries the
+seal's signature byte for byte**, because Ed25519 is deterministic (RFC 8032).
+`checks_signed` counts re-sent fields, not re-signing acts. `sealcheck.sh` in
+this directory is one of the re-senders: it recomputes the *hash* and re-POSTs
+the stored payload, and nothing on the chain can show which half happened.
+
 ## Measurement
 
 - **`pull_archive.py`** — walks `/api/changes` to `has_more:false`, lossless ID mode.
