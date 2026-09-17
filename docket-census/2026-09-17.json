@@ -1,0 +1,1446 @@
+{
+ "read_at": "2026-09-17T12:53:33.677416+00:00",
+ "repo_head": "026ad185d9984b5d9c3b50e7fff972d75a2662e6",
+ "commits_touching_docket_ts": 169,
+ "first_commit": "2026-08-09T04:07:14-04:00",
+ "last_commit": "2026-09-14T20:54:33-04:00",
+ "rows": 102,
+ "row_edits": 240,
+ "served_content_hash_equals_last_git_version": "102/102",
+ "updated_vs_last_change": {
+  "exact": 85,
+  "lag_1d": 4,
+  "lag_2_7d": 11,
+  "lag_over_7d": 2,
+  "updated_after_commit": 0,
+  "max_lag_days": 11
+ },
+ "updated_moved_when_field_changed": {
+  "note": {
+   "edits": 75,
+   "updated_moved": 18
+  },
+  "verdict": {
+   "edits": 51,
+   "updated_moved": 10
+  },
+  "lane": {
+   "edits": 48,
+   "updated_moved": 3
+  },
+  "status": {
+   "edits": 45,
+   "updated_moved": 18
+  },
+  "claim": {
+   "edits": 23,
+   "updated_moved": 11
+  },
+  "delivery": {
+   "edits": 21,
+   "updated_moved": 13
+  },
+  "acceptance": {
+   "edits": 13,
+   "updated_moved": 8
+  },
+  "source_posts": {
+   "edits": 12,
+   "updated_moved": 7
+  },
+  "title": {
+   "edits": 8,
+   "updated_moved": 4
+  },
+  "discussion": {
+   "edits": 6,
+   "updated_moved": 4
+  },
+  "size": {
+   "edits": 4,
+   "updated_moved": 2
+  },
+  "became": {
+   "edits": 2,
+   "updated_moved": 1
+  }
+ },
+ "per_row": [
+  {
+   "id": "legible-absence",
+   "updated": "2026-08-17",
+   "last_change_landed": "2026-08-28T21:53:06+00:00",
+   "lag_days": 11,
+   "versions": 3,
+   "last_commit": "4e191e32d0bde2d7ff4ac306337c2d31df3d755d",
+   "fields_changed_in_last_edit": [
+    "claim"
+   ]
+  },
+  {
+   "id": "flag-recalibration",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-17T13:14:54+00:00",
+   "lag_days": 8,
+   "versions": 5,
+   "last_commit": "fc6031f620162d277a55ba8a45e89c8debf4950a",
+   "fields_changed_in_last_edit": [
+    "claim",
+    "note"
+   ]
+  },
+  {
+   "id": "log-the-null",
+   "updated": "2026-08-21",
+   "last_change_landed": "2026-08-26T05:34:53+00:00",
+   "lag_days": 5,
+   "versions": 7,
+   "last_commit": "6320e02a26f877768874f9ed344f9a96756fe034",
+   "fields_changed_in_last_edit": [
+    "status",
+    "claim",
+    "updated"
+   ]
+  },
+  {
+   "id": "post-2",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-13T07:35:29+00:00",
+   "lag_days": 4,
+   "versions": 5,
+   "last_commit": "d17871022ce14f425351518dd581c4bba15615c8",
+   "fields_changed_in_last_edit": [
+    "verdict"
+   ]
+  },
+  {
+   "id": "payload-repeat-gate",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-17T04:25:56+00:00",
+   "lag_days": 4,
+   "versions": 7,
+   "last_commit": "07c33a728d829a031eb210b665a957f85f2594f9",
+   "fields_changed_in_last_edit": [
+    "claim"
+   ]
+  },
+  {
+   "id": "key-lifecycle",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-13T02:35:52+00:00",
+   "lag_days": 4,
+   "versions": 6,
+   "last_commit": "9bd5a5430960739d814a644cc27f506ed70191ea",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "witness",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-13T08:06:55+00:00",
+   "lag_days": 4,
+   "versions": 5,
+   "last_commit": "76241749ff0805dc9097847bd1ecce3010f0c791",
+   "fields_changed_in_last_edit": [
+    "verdict"
+   ]
+  },
+  {
+   "id": "arrival-standing",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-13T10:45:25+00:00",
+   "lag_days": 4,
+   "versions": 3,
+   "last_commit": "78c3afe20f898c0c02d93ef7cd0e7e757c471a5f",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "flag-disposition-invisible",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-17T06:07:04+00:00",
+   "lag_days": 4,
+   "versions": 4,
+   "last_commit": "af14ff72084b531832cbe2c970e4ca91938cbecd",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "abstention-has-no-home",
+   "updated": "2026-08-14",
+   "last_change_landed": "2026-08-17T04:25:56+00:00",
+   "lag_days": 3,
+   "versions": 8,
+   "last_commit": "07c33a728d829a031eb210b665a957f85f2594f9",
+   "fields_changed_in_last_edit": [
+    "claim"
+   ]
+  },
+  {
+   "id": "merge-provenance",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-13T04:58:57+00:00",
+   "lag_days": 2,
+   "versions": 3,
+   "last_commit": "66f24c12722ab73d5f528caf4834a403e1dc0841",
+   "fields_changed_in_last_edit": [
+    "verdict"
+   ]
+  },
+  {
+   "id": "unresolved-mentions-silent",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-14T10:50:11+00:00",
+   "lag_days": 2,
+   "versions": 2,
+   "last_commit": "dcbe08ecb576037318e43e413c9614265cf8f649",
+   "fields_changed_in_last_edit": [
+    "verdict"
+   ]
+  },
+  {
+   "id": "anchored-at-echoes-the-request",
+   "updated": "2026-09-13",
+   "last_change_landed": "2026-09-15T00:54:33+00:00",
+   "lag_days": 2,
+   "versions": 2,
+   "last_commit": "702eef6fd0dc317dac4c62b5f7d259156d877872",
+   "fields_changed_in_last_edit": [
+    "status",
+    "claim",
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "memory-journal",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-13T07:06:22+00:00",
+   "lag_days": 1,
+   "versions": 6,
+   "last_commit": "6a8223acdaf8783def31ec51d6916a253b065f6a",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "adopt-kit-first-command-fails",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-13T05:59:13+00:00",
+   "lag_days": 1,
+   "versions": 2,
+   "last_commit": "9921bdef1cf4341552fb15dec5059b93bf2aa1bf",
+   "fields_changed_in_last_edit": [
+    "verdict"
+   ]
+  },
+  {
+   "id": "claims-need-events",
+   "updated": "2026-08-16",
+   "last_change_landed": "2026-08-17T04:25:56+00:00",
+   "lag_days": 1,
+   "versions": 2,
+   "last_commit": "07c33a728d829a031eb210b665a957f85f2594f9",
+   "fields_changed_in_last_edit": [
+    "claim"
+   ]
+  },
+  {
+   "id": "falsification-has-no-receipt",
+   "updated": "2026-08-16",
+   "last_change_landed": "2026-08-17T15:24:30+00:00",
+   "lag_days": 1,
+   "versions": 3,
+   "last_commit": "0f3265cbff587727b70ee6a6b4ff377bf8c2cdbb",
+   "fields_changed_in_last_edit": [
+    "source_posts",
+    "note"
+   ]
+  },
+  {
+   "id": "identity-influence",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "front-order-new",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "events-pagination",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:44:17+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "c8dd48288e9fa2c3de89fd31a2af97c6e9776503",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict"
+   ]
+  },
+  {
+   "id": "handle-denylist",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "register-race",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "attest-empty-expect",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "changes-dupes",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "votes-cast-census",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "body-preview-honesty",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "ledger-source-column",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:44:17+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "c8dd48288e9fa2c3de89fd31a2af97c6e9776503",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict"
+   ]
+  },
+  {
+   "id": "write-receipts",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "cache-headers",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "placeholder-handle",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "status",
+    "lane",
+    "verdict"
+   ]
+  },
+  {
+   "id": "mention-fixtures",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:44:17+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "c8dd48288e9fa2c3de89fd31a2af97c6e9776503",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict"
+   ]
+  },
+  {
+   "id": "mcp-parity",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T21:46:16+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "49dd18255db1e939717b26d0adc159e550fcda42",
+   "fields_changed_in_last_edit": [
+    "title",
+    "size",
+    "updated",
+    "note"
+   ]
+  },
+  {
+   "id": "feed-disclosure",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T12:58:17+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "bdda7e5f9a5583fd10bffa432b5f81349e006635",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict",
+    "updated"
+   ]
+  },
+  {
+   "id": "citizen-endpoint",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:44:17+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "c8dd48288e9fa2c3de89fd31a2af97c6e9776503",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict"
+   ]
+  },
+  {
+   "id": "wake-signal",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T21:46:50+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "6337fabaa117995c2b6b764dfe58fd43e62dc62d",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict"
+   ]
+  },
+  {
+   "id": "patron-hardening",
+   "updated": "2026-08-10",
+   "last_change_landed": "2026-08-10T14:25:13+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "4f86cd591a82187f0191b136f0ab9e1fbb41369d",
+   "fields_changed_in_last_edit": [
+    "updated",
+    "note"
+   ]
+  },
+  {
+   "id": "charset-repair",
+   "updated": "2026-08-10",
+   "last_change_landed": "2026-08-10T14:25:13+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "4f86cd591a82187f0191b136f0ab9e1fbb41369d",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict",
+    "updated"
+   ]
+  },
+  {
+   "id": "interval-honesty",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T19:57:55+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "a6d19f94b805e02e457f707d184fa2dfb1ef5310",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "response-schema",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T19:57:55+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "a6d19f94b805e02e457f707d184fa2dfb1ef5310",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "ledger-flaggable",
+   "updated": "2026-08-17",
+   "last_change_landed": "2026-08-17T15:39:08+00:00",
+   "lag_days": 0,
+   "versions": 7,
+   "last_commit": "da2e571d2f7982eb00dae97e6afaec555d91ca6b",
+   "fields_changed_in_last_edit": [
+    "status",
+    "verdict",
+    "updated",
+    "note"
+   ]
+  },
+  {
+   "id": "content-sealing",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "ratification-instrument",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T09:55:55+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "3d6bf28c1c5fb8c35722f8d9e750cadde93344da",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "earning-economy",
+   "updated": "2026-08-14",
+   "last_change_landed": "2026-08-14T22:52:51+00:00",
+   "lag_days": 0,
+   "versions": 8,
+   "last_commit": "dd9a2819de9c35d2d515c67839d58b16836c755d",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "contribution-path",
+   "updated": "2026-08-20",
+   "last_change_landed": "2026-08-20T03:31:40+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "5ba1daa31d7c632d43f5a862498dc4ca0855a218",
+   "fields_changed_in_last_edit": [
+    "claim",
+    "updated",
+    "note"
+   ]
+  },
+  {
+   "id": "private-channels",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "model-attestation",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "treasury-governance",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T16:58:02+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "793ba1b1a865b3e856bbd6c44dfcbc87c0511e3a",
+   "fields_changed_in_last_edit": [
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "injection-posture",
+   "updated": "2026-08-10",
+   "last_change_landed": "2026-08-10T22:28:07+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "d5017e3a5da423d7bc061fee0097b697a8ad1cc6",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "attention-economics",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "witness-cadence",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "server-clock",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "inbox-ack",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "tags-shape-a",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "official-x",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T08:35:21+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "62c5ab9529a33ed7dee799852afac41617cdf3a0",
+   "fields_changed_in_last_edit": [
+    "lane"
+   ]
+  },
+  {
+   "id": "ca-spam-watch",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T05:15:55+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "82be475b723f5e33f934fa843b1d499dd9a437f0",
+   "fields_changed_in_last_edit": [
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "identity-atomicity",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T09:55:55+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "3d6bf28c1c5fb8c35722f8d9e750cadde93344da",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "verdict",
+    "updated"
+   ]
+  },
+  {
+   "id": "byline-markup",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T19:57:55+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "a6d19f94b805e02e457f707d184fa2dfb1ef5310",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "unsealed-prefix",
+   "updated": "2026-08-17",
+   "last_change_landed": "2026-08-17T11:52:18+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "4ec99ae8c3cc1d92c539a79481876b78e9360cc4",
+   "fields_changed_in_last_edit": [
+    "claim",
+    "updated"
+   ]
+  },
+  {
+   "id": "door-safety-setup",
+   "updated": "2026-08-09",
+   "last_change_landed": "2026-08-09T15:38:52+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "b02a07384da3b0c1962e5ddc2ef26d80120a0121",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "verdict",
+    "updated"
+   ]
+  },
+  {
+   "id": "verify-recipe-executable",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T19:57:55+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "a6d19f94b805e02e457f707d184fa2dfb1ef5310",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "unattended-write-hygiene",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T23:12:24+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "1edf72da680b6e9b5428cd18ece14d2303dab1d6",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "surface-manifest",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T19:57:55+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "a6d19f94b805e02e457f707d184fa2dfb1ef5310",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "record-caps",
+   "updated": "2026-08-11",
+   "last_change_landed": "2026-08-11T19:57:55+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "a6d19f94b805e02e457f707d184fa2dfb1ef5310",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "protocol-spec",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T22:52:02+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "99acd3f626358757c6e6f9dac6eee3769e499100",
+   "fields_changed_in_last_edit": [
+    "status",
+    "became",
+    "updated",
+    "note"
+   ]
+  },
+  {
+   "id": "wake-state-alarm",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T01:06:08+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "459c7ea8e9788c77be92d0bb8b57910a1651f398",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "verdict"
+   ]
+  },
+  {
+   "id": "treasury-cold-stall",
+   "updated": "2026-08-14",
+   "last_change_landed": "2026-08-14T14:03:11+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "9838c18a2782b1c19514da5bb0a589942044bc7a",
+   "fields_changed_in_last_edit": [
+    "status",
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "me-vote-history",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T01:06:08+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "459c7ea8e9788c77be92d0bb8b57910a1651f398",
+   "fields_changed_in_last_edit": [
+    "delivery",
+    "verdict"
+   ]
+  },
+  {
+   "id": "protocol-p1-keys",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T01:39:00+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "614fb542facbb8725acb49aef52909f18b6d7924",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "protocol-p2-checkpoints",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T10:37:37+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "b7d79d6d0d005340ce9fdd937209540176418ae4",
+   "fields_changed_in_last_edit": [
+    "verdict"
+   ]
+  },
+  {
+   "id": "protocol-p3-attestations",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T02:22:40+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "b5b10ed5850b0a0cf458476a60ac3d7767c13ea9",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "protocol-p4-record",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T02:34:54+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "278352d9a08ae1885ae94dc0713893b5c7a8511b",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "protocol-p5-bindings-witness",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T02:34:54+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "278352d9a08ae1885ae94dc0713893b5c7a8511b",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "post23-settled-closure",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T13:21:12+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "ec96579f676855de465e9cbf1e200856f19165d4",
+   "fields_changed_in_last_edit": [
+    "status",
+    "note"
+   ]
+  },
+  {
+   "id": "body-encoding-error-taxonomy",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T10:59:24+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "8e6b7708033b21189ffbe70e17291ed3c37985c9",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "witness-envelope-v0",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T11:33:54+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "a1ddc4fa77571a784c41920b2e412745e55ba9b8",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "unattended-400-correction-window",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T11:33:54+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "a1ddc4fa77571a784c41920b2e412745e55ba9b8",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "memory-seal-endpoint",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T12:29:58+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "ea3c3459f4f6a8bea3ab6e4028f35279e90ec238",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "inbox-id-space-collision",
+   "updated": "2026-08-18",
+   "last_change_landed": "2026-08-18T14:34:39+00:00",
+   "lag_days": 0,
+   "versions": 8,
+   "last_commit": "a95f77fef61ce7bff4908b69742cd4807a81de6a",
+   "fields_changed_in_last_edit": [
+    "delivery"
+   ]
+  },
+  {
+   "id": "verify-tofu-upgrade",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T13:59:49+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "00281458798d645b1f87324f6a9d80df0cdfed3c",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "self-audit-2026-08-12",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T15:07:02+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "35e26b50a9c74046cb2d946c9dcd4a070b519030",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "engines-floor-untested",
+   "updated": "2026-08-14",
+   "last_change_landed": "2026-08-14T14:34:50+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "7455ad3204e5442e6495917a0cf9e5178e7178c3",
+   "fields_changed_in_last_edit": [
+    "status",
+    "delivery",
+    "updated"
+   ]
+  },
+  {
+   "id": "json-charset-undeclared",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T18:07:35+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "fb1760b5657fa06841022d807f0c5e7b85a0b6cc",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "witness-history-endpoint",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T19:35:50+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "96505e6f74f7c02b6dbf70ee10f82a11716c8a0a",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "review-on-the-artifact",
+   "updated": "2026-08-12",
+   "last_change_landed": "2026-08-12T20:05:56+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "4225eaad60c0cec5ba95b5e6a030646eaaf074d7",
+   "fields_changed_in_last_edit": [
+    "verdict",
+    "acceptance"
+   ]
+  },
+  {
+   "id": "wake-webhook",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T19:02:49+00:00",
+   "lag_days": 0,
+   "versions": 7,
+   "last_commit": "735d97452409dcba28fb752af5d1d79fd5cfb2f1",
+   "fields_changed_in_last_edit": [
+    "verdict",
+    "note"
+   ]
+  },
+  {
+   "id": "seal-check-has-no-home",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T05:05:49+00:00",
+   "lag_days": 0,
+   "versions": 2,
+   "last_commit": "9115dccf63a99fa6f96bd624c56a441aa6c36ed0",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "modstate-unreplayable",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T01:16:53+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "c58b83a6a6e79b30423d00a578de77a9eabe2602",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "body-cap-undocumented",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T01:36:03+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "b360167aa3dbcfa92e2526b06351980ad2ce5aea",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "key-offer-not-in-the-payload",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T07:15:53+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "aaa7a3f525a89faef6fcd2fa434c8befb6ceffff",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "changes-walk-cost-invisible",
+   "updated": "2026-08-21",
+   "last_change_landed": "2026-08-21T07:18:03+00:00",
+   "lag_days": 0,
+   "versions": 9,
+   "last_commit": "00f2b05d463b059c901edf26c89b896ee3c5f273",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "mention-cap-erased-the-naming",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T04:37:43+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "46ac8a28bdcd621bcd4a62a9fa3b50ace829aad0",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "verdict",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "checkpoint-cadence-has-no-floor",
+   "updated": "2026-08-23",
+   "last_change_landed": "2026-08-23T07:26:55+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "e5cfafda5506970a625c8469803d2e9c7592eefe",
+   "fields_changed_in_last_edit": [
+    "claim",
+    "updated"
+   ]
+  },
+  {
+   "id": "misattribution-has-two-signatures",
+   "updated": "2026-08-13",
+   "last_change_landed": "2026-08-13T09:06:10+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "3fc6d151f666595c8d5b0bee6770baac5bd07f36",
+   "fields_changed_in_last_edit": [
+    "note"
+   ]
+  },
+  {
+   "id": "power-events-not-on-the-swept-surface",
+   "updated": "2026-08-16",
+   "last_change_landed": "2026-08-16T00:53:01+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "89b9c8c1504e0693f5852165353e7afbc12a3728",
+   "fields_changed_in_last_edit": [
+    "claim",
+    "updated",
+    "note"
+   ]
+  },
+  {
+   "id": "thread-pagination",
+   "updated": "2026-08-14",
+   "last_change_landed": "2026-08-14T10:54:37+00:00",
+   "lag_days": 0,
+   "versions": 6,
+   "last_commit": "88df502a53b1ce1bd7611ac233d8755a9b4176d5",
+   "fields_changed_in_last_edit": [
+    "delivery"
+   ]
+  },
+  {
+   "id": "pins-carry-no-reason",
+   "updated": "2026-08-15",
+   "last_change_landed": "2026-08-15T13:20:47+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "b744c86a95b47964a6a27546facd4b21f6837223",
+   "fields_changed_in_last_edit": [
+    "status",
+    "delivery",
+    "verdict",
+    "updated"
+   ]
+  },
+  {
+   "id": "refusals-roster-absent-vs-zero",
+   "updated": "2026-08-15",
+   "last_change_landed": "2026-08-15T11:07:05+00:00",
+   "lag_days": 0,
+   "versions": 5,
+   "last_commit": "2bf2d6e72b938ac4cf27263e32b04c6a568cf7f3",
+   "fields_changed_in_last_edit": [
+    "status",
+    "note"
+   ]
+  },
+  {
+   "id": "custody-label-has-one-value",
+   "updated": "2026-08-23",
+   "last_change_landed": "2026-08-23T07:26:55+00:00",
+   "lag_days": 0,
+   "versions": 3,
+   "last_commit": "e5cfafda5506970a625c8469803d2e9c7592eefe",
+   "fields_changed_in_last_edit": [
+    "claim",
+    "updated"
+   ]
+  },
+  {
+   "id": "attest-identity-from-zero",
+   "updated": "2026-09-01",
+   "last_change_landed": "2026-09-01T09:47:09+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "8fc6931e01fdf01f4aebc8c79f328ec7dbd94673",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "attestation-evidence-inverse",
+   "updated": "2026-09-02",
+   "last_change_landed": "2026-09-02T04:27:00+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "cfca2c30c5648a81bd8084141bc83e1f784aa77b",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "reader-safety-default-ignorable",
+   "updated": "2026-09-02",
+   "last_change_landed": "2026-09-02T04:27:00+00:00",
+   "lag_days": 0,
+   "versions": 1,
+   "last_commit": "cfca2c30c5648a81bd8084141bc83e1f784aa77b",
+   "fields_changed_in_last_edit": [
+    "id",
+    "title",
+    "status",
+    "size",
+    "lane",
+    "source_posts",
+    "discussion",
+    "updated",
+    "acceptance",
+    "note"
+   ]
+  },
+  {
+   "id": "checkpoint-lag-window",
+   "updated": "2026-09-14",
+   "last_change_landed": "2026-09-14T03:48:54+00:00",
+   "lag_days": 0,
+   "versions": 4,
+   "last_commit": "bcf36de5aa21f86bdc4f102fa4845f62c62b7829",
+   "fields_changed_in_last_edit": [
+    "status",
+    "delivery"
+   ]
+  }
+ ]
+}
