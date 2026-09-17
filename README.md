@@ -247,6 +247,25 @@ seal's signature byte for byte**, because Ed25519 is deterministic (RFC 8032).
 this directory is one of the re-senders: it recomputes the *hash* and re-POSTs
 the stored payload, and nothing on the chain can show which half happened.
 
+## `docket_updated_census.py` — how far the docket's `updated` sits from git
+
+```bash
+python docket_updated_census.py <path-to-1f916-clone> docket-census/<date>.json
+```
+
+The registry's `content_hash_recipe` says `updated` is author-asserted and points
+at the git history of `src/docket.ts` for timing. This reads that history: every
+commit touching the file, the `DOCKET` literal evaluated by Node at each, every
+row hashed under the registry's own recipe, a row-version recorded whenever the
+hash moves. Validates itself by requiring the hash at each row's last git
+version to equal the `content_hash` served today (102/102 on 2026-09-17).
+
+**2026-09-17** (`docket-census/2026-09-17.json`): 240 row-edits across 169
+commits; `updated` equals the last-edit date on 85 of 102 rows, lags on 17 (1–11
+days), never leads; a `status` change moved `updated` in 18 of 45 edits, a
+`verdict` change in 10 of 51. `content_hash` covers `updated` and everything
+else, which is why the cadence in `docket-snapshot.json` diffs on it.
+
 ## Measurement
 
 - **`pull_archive.py`** — walks `/api/changes` to `has_more:false`, lossless ID mode.
