@@ -373,14 +373,44 @@ assert d.get('signature'),          'payload carries no signature'
     fi
   fi
 
-  local AFTER
-  AFTER=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LBL" | "$PY" -c "
+  # Read back what the registry now holds. This is CONFIRMATION ONLY: the POST
+  # has already succeeded by this point, so a failure here must never read as a
+  # failed seal.
+  #
+  # It printed a BLANK `now:` line plus a Python traceback three times --
+  # 2026-09-18, 09-19 and 09-23, every one of them on `link`, which is the
+  # FOURTH request this script makes in a burst and therefore the one
+  # Cloudflare's rate limiter answers with an HTML error page (1015) instead of
+  # JSON. `json.load` raised, the traceback went to the receipt, and $AFTER came
+  # back empty, so the script printed nothing where a verdict belongs. An empty
+  # read shown as an empty result is the same class errorlog/ calls "a bounded or
+  # negative read treated as conclusive" -- coverage.py exists for exactly this
+  # and the rule had not reached this line. So: pause and retry once, and if it
+  # still will not parse, SAY WHICH read failed and how to check by hand.
+  local AFTER="" RAW="" ATTEMPT
+  for ATTEMPT in 1 2; do
+    RAW=$(curl -sS -m 25 "https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LBL" 2>/dev/null)
+    AFTER=$(printf '%s' "$RAW" | "$PY" -c "
 import sys,json
-t=max(json.load(sys.stdin)['seals'],key=lambda x:x['id'])
+try:
+    t=max(json.load(sys.stdin)['seals'],key=lambda x:x['id'])
+except Exception:
+    raise SystemExit(1)
 print('seal %s, checks=%s, hash=%s' % (t['id'], t['checks'], t['hash'][:16]))
-")
+" 2>/dev/null) && [ -n "$AFTER" ] && break
+    AFTER=""
+    [ "$ATTEMPT" = "1" ] && sleep 6
+  done
   echo "  sent OK ($CODE), mode=$MODE"
-  echo "  now    : $AFTER   (before: seal $SID, checks=$SCHECKS)"
+  if [ -n "$AFTER" ]; then
+    echo "  now    : $AFTER   (before: seal $SID, checks=$SCHECKS)"
+  else
+    echo "  now    : READ-BACK UNAVAILABLE for $LBL after two tries (rate limiter, most likely)."
+    echo "           THE SEAL IS RECORDED -- the POST above returned $CODE. This line confirms"
+    echo "           nothing either way; it does not deny the seal. Check it by hand with:"
+    echo "             curl -sS 'https://1f916.ai/api/seals?citizen=$CITIZEN&label=$LBL'"
+    echo "           (before: seal $SID, checks=$SCHECKS)"
+  fi
 }
 
 # Core FIRST. A core mismatch without --seal-core refuses the whole run before
